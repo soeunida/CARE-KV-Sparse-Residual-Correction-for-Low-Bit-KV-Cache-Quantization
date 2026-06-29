@@ -1,0 +1,7 @@
+model,cell,seq_len,num_samples,ppl,runtime_s,peak_gpu_MB,feasible,k_reads,v_reads,dppl_vs_basequant
+Qwen2.5-7B,Qwen2.5-7B fp16,512,1,6.9728,20.8,15174.7,yes,,,
+Qwen2.5-7B,Qwen2.5-7B BaseQuant_INT3,512,1,8.2405,12.2,15174.7,yes,,,
+TinyLlama,BaseQuant_INT3,512,1,8.8728,38.5,,yes,,,
+TinyLlama,uniform_INT3_CAREKV_vectorized,512,1,8.2258,63.8,3505.2,yes,617139,824653,-0.6471
+TinyLlama,BaseQuant_INT3,1024,1,6.3985,69.0,,yes,,,
+TinyLlama,uniform_INT3_CAREKV_vectorized,1024,1,5.8143,131.8,5590.6,yes,1228497,1655087,-0.5842

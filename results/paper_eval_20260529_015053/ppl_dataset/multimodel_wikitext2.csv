@@ -1,0 +1,7 @@
+model,dataset,dataset_config,dataset_split,seq_len,num_samples,base_bits,prefill_mode,route_policy,correction_impl,packed_base,scale_quant,store_abs_k,store_abs_v,read_abs_k,read_abs_v,mode,ppl,total_tokens,seconds,K_reads,V_reads,peak_gpu_mem_MB
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,wikitext,wikitext-2-raw-v1,test,128,4,3,fp,joint,cached,1,int8,2,4,2,2,fp16,12.273852,508,0.39,0,0,2261.58
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,wikitext,wikitext-2-raw-v1,test,128,4,3,base_quant,joint,cached,1,int8,2,4,2,2,base_quant_int3,15.736091,508,12.17,0,0,5424.48
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,wikitext,wikitext-2-raw-v1,test,128,4,3,carekv_stored,joint,cached,1,int8,2,4,2,2,carekv_stored_int3_optimized,13.537782,508,1584.92,640139,801653,5424.48
+JackFram/llama-160m,wikitext,wikitext-2-raw-v1,test,128,4,3,fp,joint,cached,1,int8,2,4,2,2,fp16,28.611248,508,0.32,0,0,393.98
+JackFram/llama-160m,wikitext,wikitext-2-raw-v1,test,128,4,3,base_quant,joint,cached,1,int8,2,4,2,2,base_quant_int3,36.191228,508,18.66,0,0,2897.79
+JackFram/llama-160m,wikitext,wikitext-2-raw-v1,test,128,4,3,carekv_stored,joint,cached,1,int8,2,4,2,2,carekv_stored_int3_optimized,30.470744,508,337.26,128238,166674,2897.79

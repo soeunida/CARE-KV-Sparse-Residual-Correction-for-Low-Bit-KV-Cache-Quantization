@@ -1,0 +1,2 @@
+head_dim,head_dim_group,n_cells,fixed_residual_overhead_vs_base_pct,fixed_residual_frac_of_total_pct,fixed_saving_vs_fp16_pct
+128,d97_160,27,7.0625,5.7495,76.968

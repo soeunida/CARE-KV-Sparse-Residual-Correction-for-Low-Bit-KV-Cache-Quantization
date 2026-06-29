@@ -1,0 +1,97 @@
+model_id,model_type,model_family,model_size_class,seq_len,num_samples,method,bit,ppl,delta_vs_fp16,delta_vs_basequant_int3,delta_vs_basequant_int4,selected_correction,selector_decision,calibration_ppl_vdom,calibration_ppl_kv,k_safety_triggered,gate_a_pass,gate_b_pass,turboquant_standalone,turboquant_plus_carekv_status,feasible,status,blocker,paper_usable,paper_reason
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,256,4,fp16,16,7.3547,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,256,4,BaseQuant_INT4,4,7.4208,0.0662,,,,,,,,True,,False,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,256,4,BaseQuant_INT3,3,7.8006,0.446,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,256,4,Adaptive_CAREKV_INT3,3,7.6933,0.3386,-0.1073,,Vdom,k_safety_fallback_to_vdom,7.6933,7.7128,True,True,True,False,unsupported,yes,real,,yes,selected Vdom (k_safety_fallback_to_vdom)
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,256,4,TurboQuant_INT4_standalone,4,7.4479,0.0932,-0.3527,0.0271,,,,,,,,True,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,256,4,TurboQuant_INT3_standalone,3,7.6855,0.3308,-0.1151,0.2647,,,,,,,,True,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,256,4,TurboQuant_INT2_standalone,2,48.7442,41.3896,40.9436,41.3234,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,256,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,512,4,fp16,16,6.7854,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,512,4,BaseQuant_INT4,4,6.8221,0.0367,,,,,,,,True,,False,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,512,4,BaseQuant_INT3,3,7.2972,0.5118,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,512,4,Adaptive_CAREKV_INT3,3,7.1249,0.3395,-0.1723,,KV,select_kv,7.2389,7.1249,False,True,True,False,unsupported,yes,real,,yes,selected KV (select_kv)
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,512,4,TurboQuant_INT4_standalone,4,6.8221,0.0367,-0.4752,-0.0,,,,,,,,True,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,512,4,TurboQuant_INT3_standalone,3,7.4885,0.7031,0.1913,0.6664,,,,,,,,True,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,512,4,TurboQuant_INT2_standalone,2,61.2083,54.4229,53.911,54.3862,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,512,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,1024,4,fp16,16,6.2797,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,1024,4,BaseQuant_INT4,4,6.319,0.0392,,,,,,,,True,,False,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,1024,4,BaseQuant_INT3,3,6.7147,0.4349,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,1024,4,Adaptive_CAREKV_INT3,3,6.6181,0.3383,-0.0966,,KV,select_kv,6.6349,6.6181,False,True,True,False,unsupported,yes,real,,yes,selected KV (select_kv)
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,1024,4,TurboQuant_INT4_standalone,4,6.3459,0.0661,-0.3688,0.0269,,,,,,,,True,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,1024,4,TurboQuant_INT3_standalone,3,6.608,0.3283,-0.1067,0.289,,,,,,,,True,unsupported,yes,real,,yes,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,1024,4,TurboQuant_INT2_standalone,2,79.4311,73.1514,72.7165,73.1122,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+mistralai/Mistral-7B-v0.3,mistral,mistral,7B,1024,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+openlm-research/open_llama_7b_v2,llama,llama,7B,256,4,fp16,16,9.0836,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+openlm-research/open_llama_7b_v2,llama,llama,7B,256,4,BaseQuant_INT4,4,9.1711,0.0875,,,,,,,,True,,False,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,256,4,BaseQuant_INT3,3,9.4984,0.4148,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,256,4,Adaptive_CAREKV_INT3,3,9.4176,0.334,-0.0808,,Vdom,k_safety_fallback_to_vdom,9.4176,9.4423,True,True,True,False,unsupported,yes,real,,yes,selected Vdom (k_safety_fallback_to_vdom)
+openlm-research/open_llama_7b_v2,llama,llama,7B,256,4,TurboQuant_INT4_standalone,4,9.1257,0.0421,-0.3728,-0.0454,,,,,,,,True,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,256,4,TurboQuant_INT3_standalone,3,9.5285,0.4449,0.0301,0.3574,,,,,,,,True,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,256,4,TurboQuant_INT2_standalone,2,38.4339,29.3504,28.9355,29.2629,,,,,,,,True,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,256,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+openlm-research/open_llama_7b_v2,llama,llama,7B,512,4,fp16,16,8.3935,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+openlm-research/open_llama_7b_v2,llama,llama,7B,512,4,BaseQuant_INT4,4,8.4641,0.0706,,,,,,,,True,,False,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,512,4,BaseQuant_INT3,3,8.8893,0.4958,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,512,4,Adaptive_CAREKV_INT3,3,8.8699,0.4765,-0.0193,,KV,select_kv,8.914,8.8699,False,True,True,False,unsupported,yes,real,,yes,selected KV (select_kv)
+openlm-research/open_llama_7b_v2,llama,llama,7B,512,4,TurboQuant_INT4_standalone,4,8.4951,0.1016,-0.3942,0.031,,,,,,,,True,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,512,4,TurboQuant_INT3_standalone,3,8.7476,0.3541,-0.1417,0.2835,,,,,,,,True,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,512,4,TurboQuant_INT2_standalone,2,41.8835,33.49,32.9942,33.4194,,,,,,,,True,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,512,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+openlm-research/open_llama_7b_v2,llama,llama,7B,1024,4,fp16,16,7.6504,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+openlm-research/open_llama_7b_v2,llama,llama,7B,1024,4,BaseQuant_INT4,4,7.7236,0.0731,,,,,,,,True,,False,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,1024,4,BaseQuant_INT3,3,8.1643,0.5139,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,1024,4,Adaptive_CAREKV_INT3,3,8.0965,0.4461,-0.0678,,KV,select_kv,8.0968,8.0965,False,True,True,False,unsupported,yes,real,,yes,selected KV (select_kv)
+openlm-research/open_llama_7b_v2,llama,llama,7B,1024,4,TurboQuant_INT4_standalone,4,7.6979,0.0475,-0.4664,-0.0256,,,,,,,,True,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,1024,4,TurboQuant_INT3_standalone,3,8.0399,0.3895,-0.1244,0.3163,,,,,,,,True,unsupported,yes,real,,yes,
+openlm-research/open_llama_7b_v2,llama,llama,7B,1024,4,TurboQuant_INT2_standalone,2,42.5903,34.9399,34.426,34.8667,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+openlm-research/open_llama_7b_v2,llama,llama,7B,1024,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,256,4,fp16,16,10.1599,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,256,4,BaseQuant_INT4,4,10.4443,0.2844,,,,,,,,True,,False,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,256,4,BaseQuant_INT3,3,11.3562,1.1964,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,256,4,Adaptive_CAREKV_INT3,3,11.2056,1.0457,-0.1506,,Vdom,k_safety_fallback_to_vdom,11.2056,11.2057,True,True,True,False,unsupported,yes,real,,yes,selected Vdom (k_safety_fallback_to_vdom)
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,256,4,TurboQuant_INT4_standalone,4,10.2002,0.0403,-1.156,-0.2441,,,,,,,,True,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,256,4,TurboQuant_INT3_standalone,3,10.7681,0.6082,-0.5881,0.3238,,,,,,,,True,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,256,4,TurboQuant_INT2_standalone,2,74.7075,64.5476,63.3513,64.2632,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,256,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,512,4,fp16,16,8.5982,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,512,4,BaseQuant_INT4,4,8.7456,0.1473,,,,,,,,True,,False,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,512,4,BaseQuant_INT3,3,9.6075,1.0092,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,512,4,Adaptive_CAREKV_INT3,3,9.4598,0.8616,-0.1476,,KV,select_kv,9.5597,9.4598,False,True,True,False,unsupported,yes,real,,yes,selected KV (select_kv)
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,512,4,TurboQuant_INT4_standalone,4,8.716,0.1178,-0.8914,-0.0295,,,,,,,,True,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,512,4,TurboQuant_INT3_standalone,3,9.058,0.4598,-0.5494,0.3125,,,,,,,,True,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,512,4,TurboQuant_INT2_standalone,2,68.5732,59.975,58.9658,59.8277,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,512,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,1024,4,fp16,16,7.822,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,1024,4,BaseQuant_INT4,4,7.954,0.132,,,,,,,,True,,False,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,1024,4,BaseQuant_INT3,3,8.8892,1.0672,,,,,,,,True,False,False,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,1024,4,Adaptive_CAREKV_INT3,3,8.8892,1.0672,0.0,,BaseQuant_INT3,no_valid_carekv_candidate,,,False,True,False,False,unsupported,no,blocked,,no,arch not ported / gates fail
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,1024,4,TurboQuant_INT4_standalone,4,7.936,0.114,-0.9532,-0.018,,,,,,,,True,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,1024,4,TurboQuant_INT3_standalone,3,8.2825,0.4605,-0.6067,0.3286,,,,,,,,True,unsupported,yes,real,,yes,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,1024,4,TurboQuant_INT2_standalone,2,77.2479,69.4259,68.3587,69.2939,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+deepseek-ai/deepseek-llm-7b-base,llama,llama,7B,1024,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+01-ai/Yi-6B,llama,llama,6B,256,4,fp16,16,8.6524,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+01-ai/Yi-6B,llama,llama,6B,256,4,BaseQuant_INT4,4,8.6268,-0.0256,,,,,,,,True,,False,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,256,4,BaseQuant_INT3,3,8.7492,0.0968,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,256,4,Adaptive_CAREKV_INT3,3,8.7492,0.0968,0.0,,BaseQuant_INT3,skip_near_lossless,,,False,True,True,False,unsupported,yes,real,,yes,selected BaseQuant_INT3 (skip_near_lossless)
+01-ai/Yi-6B,llama,llama,6B,256,4,TurboQuant_INT4_standalone,4,8.7889,0.1365,0.0397,0.1621,,,,,,,,True,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,256,4,TurboQuant_INT3_standalone,3,8.7745,0.1221,0.0253,0.1477,,,,,,,,True,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,256,4,TurboQuant_INT2_standalone,2,139.7776,131.1252,131.0284,131.1508,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+01-ai/Yi-6B,llama,llama,6B,256,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+01-ai/Yi-6B,llama,llama,6B,512,4,fp16,16,7.9602,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+01-ai/Yi-6B,llama,llama,6B,512,4,BaseQuant_INT4,4,8.087,0.1268,,,,,,,,True,,False,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,512,4,BaseQuant_INT3,3,8.4828,0.5226,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,512,4,Adaptive_CAREKV_INT3,3,8.473,0.5128,-0.0098,,KV,select_kv,8.4896,8.473,False,True,True,False,unsupported,yes,real,,yes,selected KV (select_kv)
+01-ai/Yi-6B,llama,llama,6B,512,4,TurboQuant_INT4_standalone,4,8.106,0.1458,-0.3768,0.0189,,,,,,,,True,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,512,4,TurboQuant_INT3_standalone,3,8.2555,0.2953,-0.2273,0.1685,,,,,,,,True,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,512,4,TurboQuant_INT2_standalone,2,146.7741,138.8139,138.2913,138.6871,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+01-ai/Yi-6B,llama,llama,6B,512,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+01-ai/Yi-6B,llama,llama,6B,1024,4,fp16,16,6.9466,,,,,,,,,,,False,unsupported,yes,real,,yes,reference
+01-ai/Yi-6B,llama,llama,6B,1024,4,BaseQuant_INT4,4,7.0533,0.1067,,,,,,,,True,,False,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,1024,4,BaseQuant_INT3,3,7.6975,0.7509,,,,,,,,True,True,False,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,1024,4,Adaptive_CAREKV_INT3,3,7.5016,0.5549,-0.196,,Vdom,k_safety_fallback_to_vdom,7.5016,7.5819,True,True,True,False,unsupported,yes,real,,yes,selected Vdom (k_safety_fallback_to_vdom)
+01-ai/Yi-6B,llama,llama,6B,1024,4,TurboQuant_INT4_standalone,4,7.001,0.0544,-0.6965,-0.0523,,,,,,,,True,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,1024,4,TurboQuant_INT3_standalone,3,7.3822,0.4356,-0.3153,0.3289,,,,,,,,True,unsupported,yes,real,,yes,
+01-ai/Yi-6B,llama,llama,6B,1024,4,TurboQuant_INT2_standalone,2,210.1293,203.1827,202.4318,203.076,,,,,,,,True,unsupported,no,unstable_outlier_collapse,,no,
+01-ai/Yi-6B,llama,llama,6B,1024,4,TurboQuant_plus_CAREKV,3,,,,,,,,,,,,False,unsupported,no,unsupported,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods.",no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."

@@ -1,0 +1,10 @@
+label,mode,max_RK,max_RV,rel_threshold,abs_threshold,min_keep,store_abs_k,store_abs_v,ppl,total_tokens,seconds,K_reads,V_reads,requested_RK_mean,requested_RV_mean,effective_RK_mean,effective_RV_mean,skipped_K_by_relative_threshold,skipped_K_by_absolute_threshold,skipped_V_by_relative_threshold,skipped_V_by_absolute_threshold,n_route_calls,mean_dO_K,mean_dO_V,base_bits,seq_len,dataset
+fixed_RK1_RV1,absolute,1,1,0.0,0.0,0,2,4,107.8027,64,115.2,43408,46704,1.0,1.0,0.963,1.037,0,0,0,0,45056,0.0,0.0,3,64,synthetic
+fixed_RK2_RV2,absolute,2,2,0.0,0.0,0,2,4,102.7457,64,111.6,81705,98519,2.0,2.0,1.813,2.187,0,0,0,0,45056,0.0,0.0,3,64,synthetic
+fixed_RK3_RV3,absolute,3,3,0.0,0.0,0,2,4,108.5229,64,116.1,102806,167530,3.0,3.0,2.282,3.718,0,0,0,0,45056,0.0,0.0,3,64,synthetic
+fixed_RK4_RV4,absolute,4,4,0.0,0.0,0,2,4,104.6538,64,124.0,130377,230071,4.0,4.0,2.894,5.106,0,0,0,0,45056,0.0,0.0,3,64,synthetic
+adaptive_maxRK4_maxRV4_rel0.00,adaptive_score,4,4,0.0,0.0,0,2,4,104.6538,64,128.8,130377,230071,4.0,4.0,2.894,5.106,0,0,0,0,45056,0.0,0.0,3,64,synthetic
+adaptive_maxRK4_maxRV4_rel0.05,adaptive_score,4,4,0.05,0.0,0,2,4,112.5239,64,116.9,89148,143846,4.0,4.0,1.979,3.193,41523,0,85931,0,45056,0.0,0.0,3,64,synthetic
+adaptive_maxRK4_maxRV4_rel0.10,adaptive_score,4,4,0.1,0.0,0,2,4,101.9023,64,123.1,84553,119312,4.0,4.0,1.877,2.648,45674,0,110909,0,45056,0.0,0.0,3,64,synthetic
+adaptive_maxRK4_maxRV4_rel0.20,adaptive_score,4,4,0.2,0.0,0,2,4,105.7077,64,124.3,78936,92893,4.0,4.0,1.752,2.062,51525,0,137094,0,45056,0.0,0.0,3,64,synthetic
+adaptive_maxRK4_maxRV4_rel0.30,adaptive_score,4,4,0.3,0.0,0,2,4,104.0599,64,120.8,73627,80458,4.0,4.0,1.634,1.786,56947,0,149416,0,45056,0.0,0.0,3,64,synthetic

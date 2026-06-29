@@ -1,0 +1,16 @@
+check,result
+1_3_cache_len_grows,PASS
+2_residual_store_grows,FAIL
+4_reads_grow,FAIL
+6_no_mem_leak,PASS
+5_read0_matches_basequant,PASS
+read0_max_dlogit,0.000e+00
+peak_mem_MB,3314.3
+
+step,hf_cache_len,expected_len,k_stored,v_stored,k_read,v_read,mem_MB
+0,33,33,0,0,42771,47341,3313.0
+1,34,34,0,0,42771,47341,3313.0
+2,35,35,0,0,42771,47341,3313.0
+3,36,36,0,0,42771,47341,3313.1
+4,37,37,0,0,42771,47341,3313.1
+5,38,38,0,0,42771,47341,3313.1

@@ -1,0 +1,3 @@
+base_bits,base_quant_ppl,stored_r0_ppl,abs_diff,status,current_clean_run
+3,2.6902858396538094,2.6902858396538094,0.0,PASS,True
+2,223.6506421860812,223.6506421860812,0.0,PASS,True

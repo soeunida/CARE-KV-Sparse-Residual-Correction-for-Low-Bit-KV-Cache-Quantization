@@ -1,0 +1,7 @@
+config,store_policy,kcg,vtb,store_abs_k,store_abs_v,read_abs_k,read_abs_v,runtime_K_store_sparsity_pct,runtime_V_store_sparsity_pct,ub_K_sparsity_note,K_recon_reduction_pct,V_recon_reduction_pct,combined_recon_reduction_pct,residual_memory_KB,ppl,evaluated_tokens,k_reads,v_reads,runtime_seconds,status,notes,dppl_vs_base_quant,dppl_vs_current_SK2SV4
+base_quant_INT3,none (read=0),32,4,2,4,0,0,100.0,100.0,(idealized U-B basis),0.0,0.0,0.0,0.0,16.1973,508,0,0,19.4,ok,,0.0,2.7355
+per_page_current_SK2SV4,per-page channel-group (paper-best),32,4,2,4,2,2,100.0,100.0,(idealized U-B basis),16.75,33.41,25.08,72.0,13.4618,508,641915,799877,1738.6,ok,,-2.7355,0.0
+mag_SK1_SV4,"per-page, half K stored",32,4,1,4,2,2,50.0,100.0,(idealized U-B basis),8.68,33.41,21.04,60.0,13.5777,508,394276,1047516,3353.2,ok,,-2.6196,0.1159
+global_mag_kcg16_s12.5,"finer kcg16, low store (deployable approx)",16,4,1,2,2,2,25.0,50.0,(idealized U-B basis),21.52,18.69,20.1,48.0,14.2451,508,454636,987156,3310.7,ok,,-1.9522,0.7833
+global_mag_kcg16_s18.8,"finer kcg16, ~same-mem store (deployable approx)",16,4,2,2,2,2,50.0,50.0,(idealized U-B basis),30.7,26.66,28.68,72.0,14.6402,508,699976,741816,3779.9,ok,,-1.5571,1.1784
+high_recon_SK4_SV4,"per-page, store-saturated (SK4 caps at num_cg=2)",32,4,4,4,2,2,100.0,100.0,(idealized U-B basis),31.73,33.41,32.57,96.0,13.4618,508,641915,799877,4472.6,ok,,-2.7355,0.0

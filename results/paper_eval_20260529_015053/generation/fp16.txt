@@ -1,0 +1,11 @@
+MODEL=TinyLlama/TinyLlama-1.1B-Chat-v1.0
+PROMPT='The capital of France is'
+MODE=None
+BITS=None
+USE_CACHE=False
+----
+The capital of France is Paris.
+
+2. B. The capital of Germany is Berlin.
+
+3. C. The capital of

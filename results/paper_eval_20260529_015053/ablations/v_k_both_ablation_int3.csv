@@ -1,0 +1,8 @@
+label,base_bits,kind,k_scale,store_budget,read_budget,v_score,score_normalize,ppl,seconds,v_slots_read,k_slots_read,current_clean_run
+v_only,3,v,0.0,0.1,0.03,output_aware,True,2.5261943062641263,230.4684755760245,90112,0,True
+k_only_kscale_0.01,3,k,0.01,0.1,0.03,output_aware,True,2.6147762797585994,249.427678699838,0,90112,True
+k_only_kscale_0.02,3,k,0.02,0.1,0.03,output_aware,True,2.6602629368154815,248.92710465192795,0,90112,True
+k_only_kscale_0.05,3,k,0.05,0.1,0.03,output_aware,True,2.4652024968914525,249.93137514102273,0,90112,True
+both_kscale_0.01,3,both,0.01,0.1,0.03,output_aware,True,2.7679459391117387,278.7896448238753,4227,85885,True
+both_kscale_0.02,3,both,0.02,0.1,0.03,output_aware,True,2.736234913243853,278.12258842703886,4149,85963,True
+both_kscale_0.05,3,both,0.05,0.1,0.03,output_aware,True,2.6060562374848764,277.5098225809634,4201,85911,True

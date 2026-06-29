@@ -1,0 +1,6 @@
+model,mode,base_bits,prefill_mode,store_budget,read_budget,prompt_len,new_tokens,prefill_ms,decode_ms_per_token,tokens_per_sec,peak_gpu_mem_MB,K_reads,V_reads,correction_calls
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,fp16,16,fp,0.0,0.0,128,8,24.09,18.41,54.321,2239.1,0,0,0
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,base_quant_int3,3,base_quant,0.1,0.0,128,8,2040.89,4165.73,0.24,3212.0,0,0,0
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,carekv_stored_int3,3,carekv_stored_optimized,0.0,0.0,128,8,397236.27,4677.16,0.214,5402.4,171695,211281,95744
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,base_quant_int2,2,base_quant,0.2,0.0,128,8,1794.64,4255.28,0.235,3147.51,0,0,0
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,carekv_stored_int2,2,carekv_stored_optimized,0.0,0.0,128,8,395174.03,4835.87,0.207,5276.83,168153,214823,95744

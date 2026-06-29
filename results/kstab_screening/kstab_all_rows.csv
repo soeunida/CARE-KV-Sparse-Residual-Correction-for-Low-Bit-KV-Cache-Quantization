@@ -1,0 +1,28 @@
+model_id,family,seq_len,num_samples,kstab,ppl,delta_vs_fp16,delta_vs_basequant_int3,delta_vs_turboquant_int3,delta_vs_baseline_carekv,correction_delta_norm_K,correction_delta_norm_V,K_reads,V_reads,collapse,status,paper_usable,notes
+facebook/opt-1.3b,OPT,512,4,fp16,21.2072,,,,,,,,,,real,yes,reference
+facebook/opt-1.3b,OPT,512,4,BaseQuant_INT3,25.1455,3.9383,,,,,,,,,real,yes,compression baseline
+facebook/opt-1.3b,OPT,512,4,TurboQuant_INT3,nan,,,,,,,,,,blocked,no,QJL standalone
+facebook/opt-1.3b,OPT,512,4,baseline,231.3201,210.1128,206.1746,,0.0,108141.96,17810.76,2849049,3442407,yes,unstable_outlier_collapse,no,baseline; t=900s
+facebook/opt-1.3b,OPT,512,4,clamp_p99,195.9497,174.7424,170.8042,,-35.3704,103325.007,17787.981,2849543,3441913,yes,unstable_outlier_collapse,no,clamp_p99; t=971s
+facebook/opt-1.3b,OPT,512,4,clamp_p95,119.2426,98.0354,94.0971,,-112.0774,93059.286,17721.802,2849608,3441848,yes,unstable_outlier_collapse,no,clamp_p95; t=997s
+facebook/opt-1.3b,OPT,512,4,nguard_p99,172.6399,151.4327,147.4944,,-58.6802,107971.294,17675.983,2782897,3442760,yes,unstable_outlier_collapse,no,nguard_p99; t=748s
+facebook/opt-1.3b,OPT,512,4,nguard_p95,216.4983,195.291,191.3528,,-14.8218,101671.517,17719.3,2619935,3443169,yes,unstable_outlier_collapse,no,nguard_p95; t=815s
+facebook/opt-1.3b,OPT,512,4,clamp99_nguard99,145.9529,124.7457,120.8074,,-85.3672,97189.468,17808.651,2782159,3443691,yes,unstable_outlier_collapse,no,clamp99_nguard99; t=1143s
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,fp16,8.5982,,,,,,,,,,real,yes,reference
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,BaseQuant_INT3,9.6075,1.0092,,,,,,,,,real,yes,compression baseline
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,TurboQuant_INT3,9.058,0.4598,,,,,,,,,real,yes,QJL standalone
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,baseline,9.2403,0.6421,-0.3672,0.1823,0.0,34909.89,24286.875,3304713,4559607,no,real,yes,baseline; t=1537s
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,clamp_p99,9.3005,0.7022,-0.307,0.2424,0.0602,34191.301,24247.371,3312438,4551882,no,real,yes,clamp_p99; t=1466s
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,clamp_p95,9.2557,0.6575,-0.3518,0.1976,0.0154,32619.848,24350.829,3310715,4553605,no,real,yes,clamp_p95; t=1262s
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,nguard_p99,11.3453,2.7471,1.7378,2.2872,2.105,32753.533,23361.628,3284358,4553221,no,real,yes,nguard_p99; t=1819s
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,nguard_p95,15.8007,7.2024,6.1932,6.7426,6.5604,29973.81,22768.686,3135788,4543621,no,real,yes,nguard_p95; t=1590s
+deepseek-ai/deepseek-llm-7b-base,DeepSeek,512,4,clamp99_nguard99,9.2715,0.6733,-0.336,0.2135,0.0312,33761.14,24335.237,3289213,4556821,no,real,yes,clamp99_nguard99; t=1425s
+01-ai/Yi-6B,Yi,512,4,fp16,7.9602,,,,,,,,,,real,yes,reference
+01-ai/Yi-6B,Yi,512,4,BaseQuant_INT3,8.4828,0.5226,,,,,,,,,real,yes,compression baseline
+01-ai/Yi-6B,Yi,512,4,TurboQuant_INT3,8.2555,0.2953,,,,,,,,,real,yes,QJL standalone
+01-ai/Yi-6B,Yi,512,4,baseline,8.3864,0.4262,-0.0964,0.1309,0.0,24163.997,12641.237,3641940,4746668,no,real,yes,baseline; t=121s
+01-ai/Yi-6B,Yi,512,4,clamp_p99,8.3045,0.3443,-0.1783,0.049,-0.0819,23913.744,12661.725,3638829,4749779,no,real,yes,clamp_p99; t=139s
+01-ai/Yi-6B,Yi,512,4,clamp_p95,8.4664,0.5062,-0.0164,0.2109,0.08,22154.189,12639.67,3634913,4753695,no,real,yes,clamp_p95; t=140s
+01-ai/Yi-6B,Yi,512,4,nguard_p99,8.289,0.3288,-0.1939,0.0334,-0.0974,24091.123,12652.785,3625455,4750239,no,real,yes,nguard_p99; t=141s
+01-ai/Yi-6B,Yi,512,4,nguard_p95,8.3627,0.4025,-0.1201,0.1072,-0.0237,23006.313,12615.032,3563658,4757808,no,real,yes,nguard_p95; t=139s
+01-ai/Yi-6B,Yi,512,4,clamp99_nguard99,8.436,0.4758,-0.0468,0.1805,0.0496,23538.73,12677.647,3631577,4740308,no,real,yes,clamp99_nguard99; t=162s

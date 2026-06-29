@@ -1,0 +1,5 @@
+label,policy,ppl,K_reads_total,V_reads_total,seconds
+uniform_baseline,uniform,3.829374,80711,99513,114.41
+u_shaped_builtin,u_shaped,3.887311,77726,102498,108.3
+sensitivity_sharp_u,sensitivity,4.220917,77972,110444,99.33
+sensitivity_default_uni,sensitivity,3.829374,80711,99513,114.26

@@ -1,0 +1,6 @@
+model_id,seq_len,num_samples,keep_ratio,evict_policy,arm,ppl,k_reads,v_reads,runtime_s,status,notes
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,1.0,-,fp16,10.1524,0,0,19.6,real,
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,1.0,-,base_noevict,12.9111,0,0,42.4,real,
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,1.0,-,carekv_noevict,11.4231,1262220,1621364,59.4,real,
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,0.9,h2o,base_evict,14.0931,0,0,39.8,real,
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,0.9,h2o,carekv_evict,12.3782,1266581,1617003,58.8,real,

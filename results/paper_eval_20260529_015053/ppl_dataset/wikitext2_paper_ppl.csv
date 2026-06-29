@@ -1,0 +1,6 @@
+model,dataset,dataset_config,dataset_split,seq_len,num_samples,base_bits,prefill_mode,route_policy,correction_impl,packed_base,scale_quant,store_abs_k,store_abs_v,read_abs_k,read_abs_v,mode,ppl,total_tokens,seconds,K_reads,V_reads,peak_gpu_mem_MB
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,wikitext,wikitext-2-raw-v1,test,128,16,16,fp,joint,cached,1,int8,2,4,2,2,fp16,15.769143,2032,0.56,0,0,2261.58
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,wikitext,wikitext-2-raw-v1,test,128,16,4,base_quant,joint,cached,1,int8,2,4,2,2,base_quant_int4,16.435839,2032,41.43,0,0,5597.37
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,wikitext,wikitext-2-raw-v1,test,128,16,3,base_quant,joint,cached,1,int8,2,4,2,2,base_quant_int3,21.737885,2032,45.86,0,0,5424.48
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,wikitext,wikitext-2-raw-v1,test,128,16,2,base_quant,joint,cached,1,int8,2,4,2,2,base_quant_int2,351.602841,2032,42.6,0,0,5298.52
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,wikitext,wikitext-2-raw-v1,test,128,16,3,carekv_stored,joint,cached,1,int8,2,4,2,2,carekv_stored_int3_optimized,18.142266,2032,6267.96,2546843,3220325,5424.48

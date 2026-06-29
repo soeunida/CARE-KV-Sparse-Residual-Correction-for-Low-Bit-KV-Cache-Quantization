@@ -1,0 +1,22 @@
+section,key,value
+config,model_id,TinyLlama/TinyLlama-1.1B-Chat-v1.0
+config,model_type,llama
+config,num_hidden_layers,22
+config,hidden_size,2048
+config,num_attention_heads,32
+config,num_key_value_heads,4
+config,head_dim,64
+config,num_key_value_groups,8
+config,is_gqa,True
+acceptance_check,C_estimator_uses_kv_heads,PASS
+acceptance_check,B_repeat_kv_group,PASS
+acceptance_check,A_no_shape_mismatch,PASS
+acceptance_check,D_nonzero_reads,PASS
+acceptance_check,E_read0_invariant,PASS
+
+method,ppl,k_reads,v_reads,seq_len,runtime_s,note
+CAREKV_uniform_INT3,102.7457,81705,98519,64,337.0,GQA forward + router fired
+CAREKV_uniform_INT3_READ0,0.0,0,0,64,0.0,READ=0 invariant max|dlogit|=0.00e+00 vs base_quant
+fp16,90.2061,0,0,64,0.0,reference
+base_quant_INT4,94.8832,0,0,64,0.0,reference
+base_quant_INT3,140.902,0,0,64,0.0,reference

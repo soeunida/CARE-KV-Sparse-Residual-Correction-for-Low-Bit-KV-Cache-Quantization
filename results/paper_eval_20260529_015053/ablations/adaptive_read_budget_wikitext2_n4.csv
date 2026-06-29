@@ -1,0 +1,8 @@
+label,mode,max_RK,max_RV,rel_threshold,abs_threshold,min_keep,store_abs_k,store_abs_v,ppl,total_tokens,seconds,K_reads,V_reads,requested_RK_mean,requested_RV_mean,effective_RK_mean,effective_RV_mean,skipped_K_by_relative_threshold,skipped_K_by_absolute_threshold,skipped_V_by_relative_threshold,skipped_V_by_absolute_threshold,n_route_calls,mean_dO_K,mean_dO_V,base_bits,seq_len,dataset,num_samples
+base_quant,absolute,0,0,0.0,0.0,0,2,4,16.1973,508,27.4,0,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,3,128,wikitext,4
+fixed_RK2_RV2,absolute,2,2,0.0,0.0,0,2,4,13.4618,508,1696.4,641915,799877,2.0,2.0,1.781,2.219,0,0,0,0,360448,0.0,0.0,3,128,wikitext,4
+fixed_RK4_RV4,absolute,4,4,0.0,0.0,0,2,4,13.1318,508,1712.9,869425,2014159,4.0,4.0,2.412,5.588,0,0,0,0,360448,0.0,0.0,3,128,wikitext,4
+adaptive_maxRK4_maxRV4_rel0.05,adaptive_score,4,4,0.05,0.0,0,2,4,12.9315,508,1596.7,696092,1217100,4.0,4.0,1.931,3.377,174552,0,795840,0,360448,0.0,0.0,3,128,wikitext,4
+adaptive_maxRK4_maxRV4_rel0.10,adaptive_score,4,4,0.1,0.0,0,2,4,13.4003,508,1691.2,667770,1019933,4.0,4.0,1.853,2.83,201643,0,994238,0,360448,0.0,0.0,3,128,wikitext,4
+adaptive_maxRK4_maxRV4_rel0.20,adaptive_score,4,4,0.2,0.0,0,2,4,13.5889,508,1623.2,611376,829257,4.0,4.0,1.696,2.301,257942,0,1185009,0,360448,0.0,0.0,3,128,wikitext,4
+adaptive_maxRK4_maxRV4_rel0.30,adaptive_score,4,4,0.3,0.0,0,2,4,13.3793,508,1669.3,565681,719910,4.0,4.0,1.569,1.997,304388,0,1293605,0,360448,0.0,0.0,3,128,wikitext,4

@@ -1,0 +1,10 @@
+stage,total_s,pct_of_forward,call_count,ms_per_call
+model_forward_total,415.795,100.0,1,415794.834
+carekv_prefill,408.757,98.31,22,18579.869
+sparse_correction_driver,406.084,97.66,22,18458.342
+router_scoring,343.777,82.68,90112,3.815
+ppl,11.7736,,,
+k_reads,154108,,,
+v_reads,206340,,,
+peak_gpu_MB,2699.7,,,
+correction_cached_call_count_=_Hq*T_loop_iters,,,0,

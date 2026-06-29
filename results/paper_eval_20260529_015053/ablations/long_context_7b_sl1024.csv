@@ -1,0 +1,7 @@
+model,method,seq_len,batch,num_samples,ppl,fp16_kv_GB,base_kv_GB,residual_GB,total_kv_GB,memory_saving_vs_fp16,peak_gpu_MB,tokens_per_sec,runtime_s,k_reads,v_reads,status,note
+Qwen/Qwen2.5-7B,fp16,1024,1,4,5.9213,0.0547,0.0547,0.0,0.0547,1.0,17160.8,4154.08,1.0,0,0,real-7B,Qwen2.5-7B fp16 reference at SL=1024
+Qwen/Qwen2.5-7B,BaseQuant_INT4,1024,1,4,7.4456,0.0547,0.0137,0.0,0.0137,0.25,17160.8,5247.67,0.8,0,0,real-7B,"per-channel K + per-token V symmetric INT4 pre-RoPE KV fake-quant (KIVI-style, outlier-robust, model-agnostic)"
+Qwen/Qwen2.5-7B,BaseQuant_INT3,1024,1,4,9.6653,0.0547,0.0103,0.0,0.0103,0.1875,17160.8,5320.94,0.8,0,0,real-7B,"per-channel K + per-token V symmetric INT3 pre-RoPE KV fake-quant (KIVI-style, outlier-robust, model-agnostic)"
+Qwen/Qwen2.5-7B,uniform_INT3+CAREKV,1024,1,4,,0.0547,0.0111,0.0007,0.0126,0.2303,,,,,,memory-projected,7B KV memory projected (Part C estimator); PPL anchor = 13.4618 on TinyLlama SL=128 N=4 (Part A) — SL=1024 CARE-KV PPL infeasible with Python-loop prototype
+Qwen/Qwen2.5-7B,KIVI_INT3+CAREKV,1024,1,4,,0.0547,0.0111,0.0007,0.0126,0.2303,,,,,,memory-projected,7B KV memory projected (Part C estimator); PPL anchor = 13.0948 on TinyLlama SL=128 N=4 (Part A) — SL=1024 CARE-KV PPL infeasible with Python-loop prototype
+Qwen/Qwen2.5-7B,KVQuantPreRoPE_INT3+CAREKV,1024,1,4,,0.0547,0.0111,0.0007,0.0126,0.2303,,,,,,memory-projected,7B KV memory projected (Part C estimator); PPL anchor = 13.1004 on TinyLlama SL=128 N=4 (Part A) — SL=1024 CARE-KV PPL infeasible with Python-loop prototype

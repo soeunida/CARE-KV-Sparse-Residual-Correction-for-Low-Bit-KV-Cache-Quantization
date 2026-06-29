@@ -1,0 +1,11 @@
+model_id,seq_len,num_samples,keep_ratio,evict_policy,arm,ppl,k_reads,v_reads,runtime_s,status,notes
+mistralai/Mistral-7B-v0.3,512,4,1.0,-,fp16,6.7854,0,0,33.5,real,
+mistralai/Mistral-7B-v0.3,512,4,1.0,-,base_noevict,7.2972,0,0,203.9,real,
+mistralai/Mistral-7B-v0.3,512,4,1.0,-,carekv_noevict,7.0183,3694176,4694432,325.9,real,
+mistralai/Mistral-7B-v0.3,512,4,0.9,h2o,base_evict,7.5979,0,0,204.6,real,
+mistralai/Mistral-7B-v0.3,512,4,0.9,h2o,carekv_evict,7.2998,3694458,4694150,334.9,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,1.0,-,fp16,8.595,0,0,25.6,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,1.0,-,base_noevict,9.7064,0,0,554.3,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,1.0,-,carekv_noevict,9.2666,3305389,4558931,1215.1,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,0.9,h2o,base_evict,9.9185,0,0,624.7,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,0.9,h2o,carekv_evict,9.3954,3303105,4561215,1502.5,real,

@@ -1,0 +1,7 @@
+MODEL=TinyLlama/TinyLlama-1.1B-Chat-v1.0
+PROMPT='The capital of France is'
+MODE=base_quant
+BITS=3
+USE_CACHE=False
+----
+The capital of France is Paris. The capital of Italy is Rome. The capital of the United States is Washington D.C. The capital of

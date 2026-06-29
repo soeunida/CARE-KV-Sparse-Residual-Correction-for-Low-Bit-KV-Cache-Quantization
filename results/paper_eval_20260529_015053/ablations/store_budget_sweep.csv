@@ -1,0 +1,9 @@
+label,prefill_mode,residual_kind,store_budget_mode,read_budget_mode,store_budget_ratio,read_budget_ratio,store_abs_k,store_abs_v,read_abs_k,read_abs_v,ppl,total_tokens,seconds,K_reads,V_reads,K_stored,V_stored,mean_dO_K,mean_dO_V,cache_mem_MB,base_bits,seq_len,dataset
+store_SK0_SV0,carekv_stored,both,absolute,absolute,0,0,0,0,2,2,140.902,64,134.3,0,0,0,0,0.0,0.0,-1.0,3,64,synthetic
+store_SK1_SV1,carekv_stored,both,absolute,absolute,0,0,1,1,2,2,127.8923,64,206.8,93635,86589,0,0,0.0,0.0,-1.0,3,64,synthetic
+store_SK1_SV2,carekv_stored,both,absolute,absolute,0,0,1,2,2,2,123.2199,64,239.6,68949,111275,0,0,0.0,0.0,-1.0,3,64,synthetic
+store_SK2_SV2,carekv_stored,both,absolute,absolute,0,0,2,2,2,2,106.361,64,265.5,93451,86773,0,0,0.0,0.0,-1.0,3,64,synthetic
+store_SK2_SV4,carekv_stored,both,absolute,absolute,0,0,2,4,2,2,102.7457,64,323.3,81705,98519,0,0,0.0,0.0,-1.0,3,64,synthetic
+store_SK4_SV4,carekv_stored,both,absolute,absolute,0,0,4,4,2,2,102.7457,64,323.1,81705,98519,0,0,0.0,0.0,-1.0,3,64,synthetic
+store_SK8_SV4,carekv_stored,both,absolute,absolute,0,0,8,4,2,2,102.7457,64,175.8,81705,98519,0,0,0.0,0.0,-1.0,3,64,synthetic
+store_SK4_SV8,carekv_stored,both,absolute,absolute,0,0,4,8,2,2,102.7457,64,120.5,81705,98519,0,0,0.0,0.0,-1.0,3,64,synthetic

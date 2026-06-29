@@ -1,0 +1,14 @@
+store_abs_k,store_abs_v,read_abs_k,read_abs_v,route_policy,score_normalize,correction_impl,base_bits,ppl,stored_K,stored_V,K_reads,V_reads,mean_delta_K,mean_delta_V,seconds,total_MB,vs_fp16,current_clean_run,label
+0,0,0,0,joint,True,cached,3,4.283075,0,0,0,0,0.0,0.0,1.44,0.3337,0.2314,True,invariant_zero
+1,1,1,1,joint,True,cached,3,4.083099,352,352,50116,39996,0.046487,0.029584,76.08,0.3337,0.2314,True,balanced_1
+2,1,2,1,joint,True,cached,3,4.150937,704,352,87523,47645,0.056939,0.028859,87.3,0.3337,0.2314,True,k_heavy_2_1
+1,2,1,2,joint,True,cached,3,4.188326,352,704,55071,80097,0.047765,0.048411,83.41,0.3337,0.2314,True,v_heavy_1_2
+2,2,2,2,joint,True,cached,3,4.219993,704,704,92525,87699,0.056766,0.049418,95.68,0.3337,0.2314,True,balanced_2
+4,2,4,2,joint,True,cached,3,4.072233,704,704,128602,141734,0.062224,0.051176,99.83,0.3337,0.2314,True,k_heavy_4_2
+2,4,2,4,joint,True,cached,3,4.233446,704,1408,102558,167778,0.058748,0.086596,111.41,0.3337,0.2314,True,v_heavy_2_4
+4,4,4,4,joint,True,cached,3,4.113584,704,1408,130275,230173,0.059657,0.087278,115.4,0.3337,0.2314,True,balanced_4
+4,4,2,2,joint,True,cached,3,3.829374,704,1408,80711,99513,0.056061,0.084837,113.73,0.3337,0.2314,True,winner_sk4sv4_rk2rv2
+4,4,1,1,joint,True,cached,3,4.338158,704,1408,43338,46774,0.042053,0.065205,109.05,0.3337,0.2314,True,store_rich_read_thin
+4,4,3,3,joint,True,cached,3,4.233446,704,1408,102558,167778,0.058748,0.086596,117.06,0.3337,0.2314,True,balanced_3
+8,4,2,2,joint,True,cached,3,3.829374,704,1408,80711,99513,0.056061,0.084837,113.48,0.3337,0.2314,True,K_store_8
+4,8,2,2,joint,True,cached,3,3.829374,704,1408,80711,99513,0.056061,0.084837,113.75,0.3337,0.2314,True,V_store_8

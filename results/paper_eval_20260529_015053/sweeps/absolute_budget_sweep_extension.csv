@@ -1,0 +1,6 @@
+store_abs_k,store_abs_v,read_abs_k,read_abs_v,route_policy,score_normalize,correction_impl,base_bits,ppl,stored_K,stored_V,K_reads,V_reads,mean_delta_K,mean_delta_V,seconds,total_MB,vs_fp16,current_clean_run,label
+4,4,2,2,joint,True,cached,3,3.829374,704,1408,80711,99513,0.056061,0.084837,113.73,0.3337,0.2314,True,winner_sk4sv4_rk2rv2
+4,4,1,1,joint,True,cached,3,4.338158,704,1408,43338,46774,0.042053,0.065205,109.05,0.3337,0.2314,True,store_rich_read_thin
+4,4,3,3,joint,True,cached,3,4.233446,704,1408,102558,167778,0.058748,0.086596,117.06,0.3337,0.2314,True,balanced_3
+8,4,2,2,joint,True,cached,3,3.829374,704,1408,80711,99513,0.056061,0.084837,113.48,0.3337,0.2314,True,K_store_8
+4,8,2,2,joint,True,cached,3,3.829374,704,1408,80711,99513,0.056061,0.084837,113.75,0.3337,0.2314,True,V_store_8

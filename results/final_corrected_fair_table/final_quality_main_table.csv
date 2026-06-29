@@ -1,0 +1,13 @@
+model_id,seq_len,fp16_ppl,basequant_int3_ppl,carekv_int3_ppl,carekv_selected_correction,carekv_effective_budget,turboquant_int3_ppl,fair_int3_result,fair_int3_tied_methods,notes
+Mistral-7B-v0.3,256,7.3547,7.8006,7.6933,Vdom,SK0SV4,7.6855,tie,TurboQuant_INT3_standalone and Adaptive_CAREKV_INT3,
+Mistral-7B-v0.3,512,6.7854,7.2972,7.1249,KV,SK2SV4,7.4885,Adaptive_CAREKV_INT3,,
+Mistral-7B-v0.3,1024,6.2797,6.7147,6.6181,KV,SK2SV4,6.608,tie,TurboQuant_INT3_standalone and Adaptive_CAREKV_INT3,
+Yi-6B,256,8.6524,8.7492,8.7492,BaseQuant_INT3,SK0SV0,8.7745,tie,Adaptive_CAREKV_INT3 and BaseQuant_INT3,base near-lossless; CARE-KV skipped (no over-claim)
+Yi-6B,512,7.9602,8.4828,8.473,KV,SK2SV4,8.2555,TurboQuant_INT3_standalone,,
+Yi-6B,1024,6.9466,7.6975,7.5016,Vdom,SK0SV4,7.3822,TurboQuant_INT3_standalone,,
+deepseek-llm-7b-base,256,10.1599,11.3562,11.2056,Vdom,SK0SV4,10.7681,TurboQuant_INT3_standalone,,
+deepseek-llm-7b-base,512,8.5982,9.6075,9.4598,KV,SK2SV4,9.058,TurboQuant_INT3_standalone,,
+deepseek-llm-7b-base,1024,7.822,8.8892,8.8892,BaseQuant_INT3,no_valid_carekv,8.2825,TurboQuant_INT3_standalone,,CARE-KV Gate B FAIL → fell back to base
+open_llama_7b_v2,256,9.0836,9.4984,9.4176,Vdom,SK0SV4,9.5285,Adaptive_CAREKV_INT3,,
+open_llama_7b_v2,512,8.3935,8.8893,8.8699,KV,SK2SV4,8.7476,TurboQuant_INT3_standalone,,
+open_llama_7b_v2,1024,7.6504,8.1643,8.0965,KV,SK2SV4,8.0399,TurboQuant_INT3_standalone,,

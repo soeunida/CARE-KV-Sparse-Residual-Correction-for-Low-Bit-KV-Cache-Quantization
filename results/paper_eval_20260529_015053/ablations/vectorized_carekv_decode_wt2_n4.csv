@@ -1,0 +1,5 @@
+cell,ppl,ppl_diff_vs_loop,k_reads,v_reads,runtime_s,speedup_vs_loop,peak_gpu_MB
+BaseQuant_INT3,16.197321,,0,0,40.9,,3353.9
+uniform_INT3_CAREKV_vectorized,13.533651,,641213,800579,78.3,,2726.3
+KIVI_INT3_CAREKV_vectorized,13.24829,,648647,793145,62.8,,2850.6
+KVQuantPreRoPE_INT3_CAREKV_vectorized,13.064098,,648158,793634,60.2,,2851.3

@@ -1,0 +1,26 @@
+model_id,seq_len,method,ppl,status,paper_usable,reason
+Mistral-7B-v0.3,256,TurboQuant_INT2_standalone,48.7442,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+Mistral-7B-v0.3,256,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+Mistral-7B-v0.3,512,TurboQuant_INT2_standalone,61.2083,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+Mistral-7B-v0.3,512,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+Mistral-7B-v0.3,1024,TurboQuant_INT2_standalone,79.4311,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+Mistral-7B-v0.3,1024,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+Yi-6B,256,TurboQuant_INT2_standalone,139.7776,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+Yi-6B,256,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+Yi-6B,512,TurboQuant_INT2_standalone,146.7741,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+Yi-6B,512,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+Yi-6B,1024,TurboQuant_INT2_standalone,210.1293,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+Yi-6B,1024,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+deepseek-llm-7b-base,256,TurboQuant_INT2_standalone,74.7075,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+deepseek-llm-7b-base,256,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+deepseek-llm-7b-base,512,TurboQuant_INT2_standalone,68.5732,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+deepseek-llm-7b-base,512,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+deepseek-llm-7b-base,1024,TurboQuant_INT2_standalone,77.2479,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+deepseek-llm-7b-base,1024,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+deepseek-llm-7b-base,1024,Adaptive_CAREKV_INT3,8.8892,blocked,no,
+open_llama_7b_v2,256,TurboQuant_INT2_standalone,38.4339,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+open_llama_7b_v2,256,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+open_llama_7b_v2,512,TurboQuant_INT2_standalone,41.8835,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+open_llama_7b_v2,512,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."
+open_llama_7b_v2,1024,TurboQuant_INT2_standalone,42.5903,unstable_outlier_collapse,no,INT2 collapse / extreme PPL degradation
+open_llama_7b_v2,1024,TurboQuant_plus_CAREKV,,unsupported,no,"QJL is a score-level inner-product estimator, while CARE-KV corrects reconstructed K/V values; direct stacking would redefine the methods."

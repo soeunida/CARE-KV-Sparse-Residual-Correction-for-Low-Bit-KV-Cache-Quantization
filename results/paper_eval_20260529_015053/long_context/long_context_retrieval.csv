@@ -1,0 +1,10 @@
+task,mode,kind,num_trials,ctx_target,max_new,num_pairs,easy,exact_match,char_acc,seconds,K_reads,V_reads,sample_answers,label
+kv_retrieval,fp16,both,5,128,6,6,0,1.0,1.0,0.95,0,0,target=QD9AFZ|ans='QD9AFZ'|em=1;target=R25WFU|ans='R25WFU'|em=1;target=MQW4KN|ans='MQW4KN'|em=1,fp16
+kv_retrieval,base_quant,both,5,128,6,6,0,0.0,0.13333333333333333,132.56,0,0,target=QD9AFZ|ans='65ZT4'|em=0;target=R25WFU|ans='8N8N9'|em=0;target=MQW4KN|ans='MQW1L'|em=0,base_quant_int3
+kv_retrieval,carekv_stored,both,5,128,6,6,0,0.0,0.3,1842.24,688986,907686,target=QD9AFZ|ans='QG8W65'|em=0;target=R25WFU|ans='R25JJJ'|em=0;target=MQW4KN|ans='MQJ9A'|em=0,carekv_int3_both
+boundary,fp16,both,5,128,6,6,0,1.0,1.0,0.55,0,0,target=QD9AFZ|ans='QD9AFZ'|em=1;target=RHOXKV|ans='RHOXKV'|em=1;target=9A3FVC|ans='9A3FVC'|em=1,fp16
+boundary,base_quant,both,5,128,6,6,0,0.2,0.3333333333333333,132.57,0,0,target=QD9AFZ|ans='9S2FY'|em=0;target=RHOXKV|ans='RHOXV'|em=0;target=9A3FVC|ans='9A3FVC'|em=1,base_quant_int3
+boundary,carekv_stored,both,5,128,6,6,0,0.0,0.06666666666666667,1948.63,709372,923908,target=QD9AFZ|ans='U65ZTU'|em=0;target=RHOXKV|ans='8Z7RH'|em=0;target=9A3FVC|ans='2A0CZ'|em=0,carekv_int3_both
+copy,fp16,both,5,128,6,6,0,0.0,0.0,0.57,0,0,target=Y0CQ65|ans='filler that does not con'|em=0;target=ZT4WN6|ans='er that does not contain'|em=0;target=ISIGQ8|ans='er that does not contain'|em=0,fp16
+copy,base_quant,both,5,128,6,6,0,0.0,0.0,146.69,0,0,target=Y0CQ65|ans='fillerasec. Cont'|em=0;target=ZT4WN6|ans='er that does not contain'|em=0;target=ISIGQ8|ans='er that does not contain'|em=0,base_quant_int3
+copy,carekv_stored,both,5,128,6,6,0,0.0,0.0,2214.63,749699,1052541,target=Y0CQ65|ans='fillergoespecially fill'|em=0;target=ZT4WN6|ans='er that does not the sec'|em=0;target=ISIGQ8|ans='er that does not contain'|em=0,carekv_int3_both

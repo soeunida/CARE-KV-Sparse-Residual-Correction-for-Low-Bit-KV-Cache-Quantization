@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.Python
+*.egg-info/
+
+# pytest / mypy
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Backup snapshots (point-in-time dev artifacts, not source)
+*.bak
+*.bak_*
+*.passthrough_working
+*.rope_working
+backups/
+
+# Stray dev files
+=0.26.0
+*.tmp
+*.swp
+
+# Local caches / credentials / tokens
+.cache/
+hf_cache/
+.huggingface/
+.netrc
+*.env
+*.secret
+*.key
+
+# Build/dist
+build/
+dist/
+
+# Per-run / per-task logs
+*.log
+results/**/logs/
+results/**/multimodel_logs/
+results/**/*.log
+
+# Archived old result directories
+results/archive_*/
+
+# Loose temporary debug dumps at results/ root
+results/debug_*.txt
+
+# Per-cell smoke artifacts kept inside paper_eval_*
+results/**/run.log.done
+results/**/*.log.done
+results/**/.bench_done
+results/**/.*_done

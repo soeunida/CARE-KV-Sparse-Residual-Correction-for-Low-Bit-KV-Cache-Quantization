@@ -1,0 +1,7 @@
+label,baseline_score,prefill_mode,read_abs_k,read_abs_v,store_abs_k,store_abs_v,route_policy,ppl,total_tokens,seconds,K_reads,V_reads,K_stored,V_stored,mean_dO_K,mean_dO_V,base_bits,dataset,seq_len,num_samples
+base_quant,carekv,base_quant,0,0,2,4,joint,16.1973,508,28.1,0,0,0,0,0.0,0.0,3,wikitext,128,4
+random,random,carekv_stored,2,2,2,4,joint,16.1513,508,1740.2,475915,965877,0,0,0.0,0.0,3,wikitext,128,4
+magnitude_only,magnitude_only,carekv_stored,2,2,2,4,joint,14.6169,508,1593.4,1320645,121147,0,0,0.0,0.0,3,wikitext,128,4
+attention_only,attention_only,carekv_stored,2,2,2,4,joint,13.2859,508,1579.1,646955,794837,0,0,0.0,0.0,3,wikitext,128,4
+carekv_score,carekv,carekv_stored,2,2,2,4,joint,13.4618,508,1574.8,641915,799877,0,0,0.0,0.0,3,wikitext,128,4
+oracle_proxy,oracle_proxy,carekv_stored,2,2,2,4,joint,13.157,508,1579.7,673460,768332,0,0,0.0,0.0,3,wikitext,128,4
