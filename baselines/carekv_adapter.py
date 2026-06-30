@@ -158,7 +158,7 @@ class CAREKVAdapter(KVMethodAdapter):
             head_dim=hd, base_bits=self.bits,
             group_size=32, k_channel_group=32, page_size=16,
             max_pages=self.max_pages,
-            v_token_block=4, sketch_dim=16,
+            v_token_block=4, sketch_dim=32,   # full-rank sketch (=k_channel_group)
             store_budget_ratio=0.0, read_budget_ratio=0.0,
             store_budget_mode="absolute", read_budget_mode="absolute",
         )

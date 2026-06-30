@@ -1,0 +1,7 @@
+arm,prefill_mode,sketch_dim,corr_impl,ppl,k_reads,v_reads,evaluated_tokens,seconds
+fp16,fp,16,vectorized,15.4342,0,0,126,28.8
+base_int3,base_quant,16,vectorized,20.5152,0,0,126,20.6
+carekv_vec_sk16,carekv_stored,16,vectorized,17.3013,160889,199559,126,25.4
+carekv_vec_sk32,carekv_stored,32,vectorized,16.434,162343,198105,126,22.7
+carekv_vec_sk64,carekv_stored,64,vectorized,17.1632,162282,198166,126,25.7
+carekv_cached_sk16,carekv_stored,16,cached,17.2014,159977,200471,126,390.5

@@ -229,7 +229,11 @@ class CacheConfig:
     read_budget_ratio: float = 0.03    # read up to this fraction per decode step
 
     # Sketch
-    sketch_dim: int = 16         # random projection dim for R_K sketch
+    sketch_dim: int = 32         # R_K sketch dim; =k_channel_group → full-rank
+                                 # (no lossy projection) so |q·R_K| ranking is
+                                 # exact. 16 was lossy (32→16); bump validated
+                                 # (router_diagnostic: sk16 14.98 → sk32 14.93 →
+                                 # sk64 14.81 at N=8 SL=128; 32 = full rank).
 
     # Sensitivity (per-layer weights, can be calibrated)
     layer_sensitivity: Optional[List[float]] = None

@@ -91,7 +91,7 @@ def _make_model(model_id: str, mode: str, base_bits: int):
         num_kv_heads=cfg.num_key_value_heads,
         head_dim=hd, base_bits=base_bits,
         group_size=32, k_channel_group=32, page_size=16, max_pages=256,
-        v_token_block=4, sketch_dim=16,
+        v_token_block=4, sketch_dim=32,   # full-rank sketch (=k_channel_group)
         # Defaults match the paper-best config; env overrides take precedence.
         store_budget_ratio=0.0, read_budget_ratio=0.0,
         store_budget_mode="absolute", read_budget_mode="absolute",
