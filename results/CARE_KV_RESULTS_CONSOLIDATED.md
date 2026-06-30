@@ -119,6 +119,28 @@ _On stable models (TinyLlama, Mistral-7B): CARE-KV **composes positively** with 
 _**DeepSeek-7B is a kivi-base artifact, not a mixed-precision failure** — confirmed by direct re-verification: on the **uniform-packed base** (production family) DeepSeek CARE-KV is **stable**, `base 9.71 → CARE 9.27` (gain **+0.44**, matching the NS=64 production 9.07), whereas on the **kivi-INT3 side-buffer base** the same model collapses (`base 11.62 → CARE 55.65`). So the 55.6 collapse is caused by the kivi per-channel K quantizer destabilizing CARE-KV's 1st-order K correction on DeepSeek's outlier-heavy K — orthogonal to the mixed-precision question. (Mixed precision is only realizable here through the kivi side-buffer override, so the clean mixed-precision orthogonality evidence rests on TinyLlama + Mistral.)_
 
 
+## 5d. Runtime & memory (T6) — NOT a speed method (prototype latency)
+
+CARE-KV's prefill is a per-(layer, kv_head, token) **Python loop** — prototype latency, NOT the achievable runtime. From `latency.csv` (TinyLlama, prompt 128, prefill):
+
+| method | prefill_ms | vs base | peak_GPU_MB |
+|---|---|---|---|
+| fp16 | 22.8 | — | 2239 |
+| BaseQuant_INT3 | 2044 | 1× | 3212 |
+| **CARE-KV_INT3** | **215626** | **~105×** | 3212 |
+
+- CARE-KV prefill is **~100× slower than BaseQuant** and **~9500× slower than fp16** (Python loop). Vectorization (`prefill_vectorization_bench.csv`) gives only **1.36×** — still prototype.
+- **Peak GPU memory is HIGHER for CARE-KV** (3212 vs fp16 2239 MB) because the HF DynamicCache holds dummy fp16 K/V. The memory benefit is in the **KV-cache storage** (analytic ≈0.24–0.26× fp16 at long context), **not** peak runtime memory.
+- **GQA-ladder full-eval wall-clock** (SL512/N4, CARE-KV cell incl. model load + correction): TinyLlama 109 s, Yi-6B 173 s, Mistral-7B 332 s, SOLAR-10.7B 436 s — scales with size, dominated by the prototype correction loop.
+
+→ **CARE-KV is a quality/memory method, with no speed advantage**; a deployable latency needs CUDA/Triton kernels for packed-unpack + correction. Report prototype numbers honestly; make **no speedup claim**.
+
+
+## 5e. Rotation-CARE-KV (T7) — NO-GO at scale (settled)
+
+Settled negative (see §5). Hadamard pre-RoPE rotation + CARE-KV passed the TinyLlama screening gate (13.26 < 13.46 bar) but **does not transfer to 7B**: the de-risk on DeepSeek-7B regressed badly (rot_pre_carekv 10.47 ≫ uniform_carekv 9.27, worse even than base 9.71). The screening GO was a small-model artifact; on the primary hard target rotation hurts. **Conclusion: rotation and CARE-KV do not compose at scale** — no confirm run warranted.
+
+
 ## 6. Honest paper positioning
 
 CARE-KV is a **reliable improvement over naive INT3 compression** (beats BaseQuant everywhere, across 11 architectures) but is **not** a TurboQuant-beater on raw PPL — the deficit is **structural** (un-rotated base + sparse capped residual + unstable K correction on outlier-heavy K). The strongest leads to narrow/flip the Turbo gap are (a) **rotation-CARE-KV** (in screening), (b) **combined_kvscore** selector (Mistral-only win), and (c) **K-correction stabilization** (clamp/norm-guard, untested at scale). A clean negative on rotation (substitutes, not complements) is itself a citable finding.
