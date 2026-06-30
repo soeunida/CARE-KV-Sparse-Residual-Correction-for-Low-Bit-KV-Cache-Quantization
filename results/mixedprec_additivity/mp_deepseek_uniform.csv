@@ -1,0 +1,4 @@
+model_id,seq_len,num_samples,hi_frac,bits_hi,bits_lo,saliency,arm,ppl,k_reads,v_reads,runtime_s,status,notes
+deepseek-ai/deepseek-llm-7b-base,512,4,-,-,-,-,fp16,8.595,0,0,29.5,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,-,-,-,-,base_uniform,9.7064,0,0,770.9,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,-,-,-,-,carekv_uniform,9.2666,3305389,4558931,1518.4,real,

@@ -674,6 +674,15 @@ class CAREKVLayer(nn.Module):
             )
             K_hat_pre_override = k_hat_b[0]                        # (Hkv, T, D) post-RoPE
 
+        # Mixed-precision base override (LeanKV/MiKV-style, gated). Quantize post-RoPE
+        # K/V with per-token bit-widths and feed it as the store's K̂/V̂ override so the
+        # residual R = X − X̂_mixed AND the base attention both use the SAME mixed base
+        # (consistent → CARE-KV stacks cleanly). Default off → (None,None) → unchanged.
+        if rope_applied:
+            _K_mp, _V_mp = self._mixed_precision_base(K_post, V)
+            if _K_mp is not None:
+                K_hat_pre_override, V_hat_pre_override = _K_mp, _V_mp
+
         # ── Cache write (always; post-RoPE K) ─────────────────────────
         # Returns the dequantized base K_hat/V_hat actually stored (valid rows).
         K_hat_kvh: List[Tensor] = []      # per kv_head, (T, D)
@@ -703,14 +712,6 @@ class CAREKVLayer(nn.Module):
             K_hat_stack, V_hat_stack = self._lowrank_correct_eval(
                 K_post, V, K_hat_stack, V_hat_stack, lr_rank,
                 os.environ.get("CAREKV_LOWRANK_KIND", "both").lower())
-
-        # Mixed-precision base (LeanKV/MiKV-style, gated). Re-quantize K̂/V̂ with
-        # per-token bit-widths (salient tokens hi-bit, rest lo-bit) so the residual
-        # router/correction operate on a mixed-precision base — tests whether CARE-KV's
-        # gain is ADDITIVE on top of mixed precision (Section 2 orthogonality). Default
-        # CAREKV_MIXEDPREC_HI_FRAC unset → no-op (byte-identical).
-        K_hat_stack, V_hat_stack = self._apply_mixed_precision(
-            K_post, V, K_hat_stack, V_hat_stack)
 
         # ── Compute attention output for the chosen mode ──────────────
         if prefill_mode == "fp":
@@ -795,14 +796,14 @@ class CAREKVLayer(nn.Module):
     # ─────────────────────────────────────────
 
     @staticmethod
-    def _apply_mixed_precision(K_post, V, K_hat, V_hat):
-        """LeanKV/MiKV-style mixed-precision base (EXPERIMENTAL, gated). Re-quantizes
-        the base K̂/V̂ with PER-TOKEN bit-widths: the top CAREKV_MIXEDPREC_HI_FRAC of
-        tokens (by saliency) at bits_hi, the rest at bits_lo (avg ≈ INT3). The residual
-        R = X − X̂ is then computed against this mixed base, so CARE-KV's sparse
-        correction stacks on top → tests CARE-KV ⊥ mixed-precision. Default unset /
-        hi_frac∉(0,1) → returns inputs unchanged (byte-identical; preserves
-        READ=0≡base and Gate A/B).
+    def _mixed_precision_base(K_post, V):
+        """LeanKV/MiKV-style mixed-precision base (EXPERIMENTAL, gated). Quantizes the
+        post-RoPE K and V with PER-TOKEN bit-widths: the top CAREKV_MIXEDPREC_HI_FRAC of
+        tokens (by saliency) at bits_hi, the rest at bits_lo. Returns (K_mp, V_mp) — the
+        dequantized mixed-precision base — to be passed as the store's K̂/V̂ override so
+        the residual R = X − X̂_mixed is computed against this base AND attention uses it
+        (consistent). Default unset / hi_frac∉(0,1) → returns (None, None) → no-op
+        (byte-identical; preserves READ=0≡base and Gate A/B).
 
         Env: CAREKV_MIXEDPREC_HI_FRAC, CAREKV_MIXEDPREC_BITS_HI/LO,
              CAREKV_MIXEDPREC_SALIENCY (vnorm | recent | random).
@@ -812,9 +813,9 @@ class CAREKVLayer(nn.Module):
         except Exception:
             hi_frac = 0.0
         if not (0.0 < hi_frac < 1.0):
-            return K_hat, V_hat
+            return None, None
         bits_hi = int(os.environ.get("CAREKV_MIXEDPREC_BITS_HI", "4"))
-        bits_lo = int(os.environ.get("CAREKV_MIXEDPREC_BITS_LO", "2"))
+        bits_lo = int(os.environ.get("CAREKV_MIXEDPREC_BITS_LO", "3"))
         sal = os.environ.get("CAREKV_MIXEDPREC_SALIENCY", "vnorm")
         Hkv, T, D = V.shape
         dev = V.device
@@ -830,8 +831,8 @@ class CAREKVLayer(nn.Module):
         m = hi_mask.view(1, T, 1)
         K_hi = _kivi_quant_dequant_K(K_post, bits_hi); K_lo = _kivi_quant_dequant_K(K_post, bits_lo)
         V_hi = _kivi_quant_dequant_V(V, bits_hi);      V_lo = _kivi_quant_dequant_V(V, bits_lo)
-        K_mp = torch.where(m, K_hi.to(K_hat.dtype), K_lo.to(K_hat.dtype))
-        V_mp = torch.where(m, V_hi.to(V_hat.dtype), V_lo.to(V_hat.dtype))
+        K_mp = torch.where(m, K_hi.to(K_post.dtype), K_lo.to(K_post.dtype))
+        V_mp = torch.where(m, V_hi.to(V.dtype), V_lo.to(V.dtype))
         return K_mp, V_mp
 
     @staticmethod

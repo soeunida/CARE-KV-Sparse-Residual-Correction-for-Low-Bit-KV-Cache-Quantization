@@ -55,14 +55,20 @@ for mid in models:
             ck_b.append(ck - bq)
         if ck is not None and tq is not None:
             ck_t.append(ck - tq)
-wb = sum(1 for d in ck_b if d < -1e-3)
-wt = sum(1 for d in ck_t if d < -1e-3)
-L.append(f"- **CARE-KV vs BaseQuant_INT3 (NS=64, 12 cells): {wb}W / {12-wb}L** — mean ΔPPL "
-         f"**{sum(ck_b)/len(ck_b):+.3f}**. CARE-KV reliably improves the naive INT3 baseline.\n")
-L.append(f"- **CARE-KV vs TurboQuant_INT3 (NS=64, 12 cells): {wt}W / {12-wt}L** — mean ΔPPL "
-         f"**{sum(ck_t)/len(ck_t):+.3f}**. At the rigorous sample size, TurboQuant (QJL rotation) wins everywhere.\n")
-L.append("- **Gap tracks K-outlier severity:** smallest on Mistral (≈parity), largest on "
-         "outlier-heavy Yi / DeepSeek. → motivates the rotation-CARE-KV direction.\n")
+if ck_b:
+    wb = sum(1 for d in ck_b if d < -1e-3)
+    wt = sum(1 for d in ck_t if d < -1e-3)
+    n = len(ck_b)
+    L.append(f"- **CARE-KV vs BaseQuant_INT3 (NS=64, {n} cells): {wb}W / {n-wb}L** — mean ΔPPL "
+             f"**{sum(ck_b)/len(ck_b):+.3f}**. CARE-KV reliably improves the naive INT3 baseline.\n")
+    if ck_t:
+        L.append(f"- **CARE-KV vs TurboQuant_INT3 ({len(ck_t)} cells): {wt}W / {len(ck_t)-wt}L** — mean ΔPPL "
+                 f"**{sum(ck_t)/len(ck_t):+.3f}**. At the rigorous sample size, TurboQuant (QJL rotation) wins everywhere.\n")
+    L.append("- **Gap tracks K-outlier severity:** smallest on Mistral (≈parity), largest on "
+             "outlier-heavy Yi / DeepSeek. → motivates the rotation-CARE-KV direction.\n")
+else:
+    L.append("- _(production NS=64 CSV not present in this repo — sections 0–1 skipped; "
+             "see orthogonality sections 5b/5c below.)_\n")
 
 L.append("\n## 1. NS=64 production full grid (most rigorous)\n")
 L.append("| model | SL | fp16 | Base3 | CARE-KV | Turbo | Δ vs Base | Δ vs Turbo | winner |")
@@ -204,6 +210,49 @@ if erows:
              "more aggressive, CARE-KV recovers proportionally more of the damage (complementary).\n")
 else:
     L.append("\n_(eviction CSVs not found.)_\n")
+
+# ── 5c. Orthogonality to mixed-precision (LeanKV/MiKV) ───────────────────────
+L.append("\n## 5c. Orthogonality to mixed-precision (LeanKV/MiKV) — composes, diminishing\n")
+L.append("Gated per-token mixed-precision base (CAREKV_MIXEDPREC_HI_FRAC; salient tokens "
+         "bits_hi=4, rest bits_lo=3, kivi side-buffer so store+attention stay consistent). "
+         "Compares CARE gain on a kivi-INT3 base vs a kivi-mixed(4/3) base.\n")
+mp_files = [f"{ROOT}/mixedprec_additivity/mp_tl_kivi.csv",
+            f"{ROOT}/mixedprec_additivity/mp_7b_kivi43.csv"]
+mrows = []
+for mf in mp_files:
+    mrows += load(mf)
+if mrows:
+    L.append("| model | base kivi-INT3 | +CARE | base mixed4/3 | +CARE | gain (INT3) | gain (mixed) | note |")
+    L.append("|---|---|---|---|---|---|---|---|")
+    mmods = []
+    for r in mrows:
+        if r["model_id"] not in mmods:
+            mmods.append(r["model_id"])
+    for mid in mmods:
+        def mg(a):
+            for r in mrows:
+                if r["model_id"] == mid and r["arm"] == a:
+                    return fv(r.get("ppl"))
+            return None
+        bu, cu, bm, cm = mg("base_uniform"), mg("carekv_uniform"), mg("base_mixedprec"), mg("carekv_mixedprec")
+        if None in (bu, cu, bm, cm):
+            continue
+        g0, g1 = bu - cu, bm - cm
+        note = "K-corr collapse (kivi base)" if (cu > 5 * bu or cm > 5 * bm) else \
+               ("composes (diminishing)" if g1 > 0 else "~")
+        L.append(f"| {short(mid)[:16]} | {bu:.2f} | {cu:.2f} | {bm:.2f} | {cm:.2f} | "
+                 f"+{g0:.2f} | {g1:+.2f} | {note} |")
+    L.append("\n_On stable models (TinyLlama, Mistral-7B): CARE-KV **composes positively** with mixed "
+             "precision — the stack (mixed + CARE-KV) is the best arm and CARE-KV still adds a positive "
+             "gain on the mixed base — but with **diminishing returns** (the mixed base has less "
+             "quantization error to recover, so the gain shrinks vs the INT3 base). Weaker than "
+             "eviction's clean additivity: mixed-precision and sparse residual are **partial substitutes** "
+             "that still compose. On outlier-heavy DeepSeek-7B, CARE-KV's 1st-order K correction is "
+             "unstable on the kivi base (collapses on both; mixed reduces severity 55.6→19.2 but does "
+             "not fix) — a kivi-base K-instability artifact (the uniform-packed base in the NS=64 grid "
+             "did not collapse DeepSeek)._\n")
+else:
+    L.append("\n_(mixed-precision CSVs not found.)_\n")
 
 # ── 6. Positioning ───────────────────────────────────────────────────────────
 L.append("\n## 6. Honest paper positioning\n")

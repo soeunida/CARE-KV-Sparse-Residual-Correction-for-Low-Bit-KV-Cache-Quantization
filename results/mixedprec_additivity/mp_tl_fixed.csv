@@ -1,0 +1,6 @@
+model_id,seq_len,num_samples,hi_frac,bits_hi,bits_lo,saliency,arm,ppl,k_reads,v_reads,runtime_s,status,notes
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,-,-,-,-,fp16,10.1524,0,0,13.2,real,
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,-,-,-,-,base_uniform,12.9111,0,0,34.5,real,
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,-,-,-,-,carekv_uniform,11.4231,1262220,1621364,55.6,real,
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,0.5,4,3,vnorm,base_mixedprec,12.9111,0,0,33.9,real,
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,256,4,0.5,4,3,vnorm,carekv_mixedprec,11.4231,1262220,1621364,61.4,real,

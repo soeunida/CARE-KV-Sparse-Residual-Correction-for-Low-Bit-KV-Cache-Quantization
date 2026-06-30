@@ -1,0 +1,11 @@
+model_id,seq_len,num_samples,hi_frac,bits_hi,bits_lo,saliency,arm,ppl,k_reads,v_reads,runtime_s,status,notes
+mistralai/Mistral-7B-v0.3,512,4,-,-,-,-,fp16,6.7854,0,0,24.4,real,
+mistralai/Mistral-7B-v0.3,512,4,-,-,-,-,base_uniform,7.7772,0,0,118.0,real,
+mistralai/Mistral-7B-v0.3,512,4,-,-,-,-,carekv_uniform,7.1406,3719276,4669332,270.3,real,
+mistralai/Mistral-7B-v0.3,512,4,0.5,4,3,vnorm,base_mixedprec,7.1538,0,0,124.6,real,
+mistralai/Mistral-7B-v0.3,512,4,0.5,4,3,vnorm,carekv_mixedprec,6.9903,3764296,4624312,229.2,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,-,-,-,-,fp16,8.595,0,0,13.8,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,-,-,-,-,base_uniform,11.6238,0,0,327.2,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,-,-,-,-,carekv_uniform,55.6498,3414980,4449340,827.0,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,0.5,4,3,vnorm,base_mixedprec,10.1595,0,0,379.3,real,
+deepseek-ai/deepseek-llm-7b-base,512,4,0.5,4,3,vnorm,carekv_mixedprec,19.2332,3431446,4432874,982.9,real,

@@ -104,6 +104,21 @@ Gated H2O-style eviction (`CAREKV_EVICT_KEEP_RATIO`, keep=0.9) applied to the ba
 _At a sensible eviction level (keep=0.9, near-lossless base), CARE-KV's residual gain is preserved on top of eviction (CARE gain ≈ same with/without eviction, both >0) across TinyLlama + Mistral-7B + DeepSeek-7B → **eviction and sparse residual are additive/orthogonal**. Unlike rotation, this transfers cleanly to 7B. As eviction gets more aggressive, CARE-KV recovers proportionally more of the damage (complementary).
 
 
+## 5c. Orthogonality to mixed-precision (LeanKV/MiKV) — composes, diminishing
+
+Gated per-token mixed-precision base (`CAREKV_MIXEDPREC_HI_FRAC`; salient tokens bits_hi=4, rest bits_lo=3, kivi side-buffer so store+attention stay consistent). Compares CARE gain on a kivi-INT3 base vs a kivi-mixed(4/3) base.
+
+| model | base kivi-INT3 | +CARE | base mixed4/3 | +CARE | gain (INT3) | gain (mixed) | note |
+|---|---|---|---|---|---|---|---|
+| TinyLlama-1.1B | 14.00 | 11.15 | 11.60 | 10.61 | +2.85 | +0.99 | composes (diminishing) |
+| Mistral-7B | 7.78 | 7.14 | 7.15 | 6.99 | +0.64 | +0.16 | composes (diminishing) |
+| DeepSeek-7B | 11.62 | 55.65 | 10.16 | 19.23 | −44.03 | −9.07 | K-corr collapse (kivi base) |
+
+_On stable models (TinyLlama, Mistral-7B): CARE-KV **composes positively** with mixed precision — the stack (mixed + CARE-KV) is the best arm and CARE-KV still adds a positive gain on the mixed base — but with **diminishing returns** (the mixed base has less quantization error to recover, so the gain shrinks vs the INT3 base). Weaker than eviction's clean additivity: mixed-precision and sparse residual are **partial substitutes** that still compose._
+
+_**DeepSeek-7B is a kivi-base artifact, not a mixed-precision failure** — confirmed by direct re-verification: on the **uniform-packed base** (production family) DeepSeek CARE-KV is **stable**, `base 9.71 → CARE 9.27` (gain **+0.44**, matching the NS=64 production 9.07), whereas on the **kivi-INT3 side-buffer base** the same model collapses (`base 11.62 → CARE 55.65`). So the 55.6 collapse is caused by the kivi per-channel K quantizer destabilizing CARE-KV's 1st-order K correction on DeepSeek's outlier-heavy K — orthogonal to the mixed-precision question. (Mixed precision is only realizable here through the kivi side-buffer override, so the clean mixed-precision orthogonality evidence rests on TinyLlama + Mistral.)_
+
+
 ## 6. Honest paper positioning
 
 CARE-KV is a **reliable improvement over naive INT3 compression** (beats BaseQuant everywhere, across 11 architectures) but is **not** a TurboQuant-beater on raw PPL — the deficit is **structural** (un-rotated base + sparse capped residual + unstable K correction on outlier-heavy K). The strongest leads to narrow/flip the Turbo gap are (a) **rotation-CARE-KV** (in screening), (b) **combined_kvscore** selector (Mistral-only win), and (c) **K-correction stabilization** (clamp/norm-guard, untested at scale). A clean negative on rotation (substitutes, not complements) is itself a citable finding.

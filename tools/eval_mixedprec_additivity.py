@@ -30,9 +30,6 @@ sys.path.insert(0, "/home/soeun/CARE_KV/care_kv/tools")
 os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["HF_HUB_OFFLINE"] = "1"; os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ.setdefault("CAREKV_VECTORIZED_RESIDUAL", "1")
-os.environ.setdefault("CAREKV_VECTORIZE_VDOM_ONLY", "1")
-
 import torch
 from CARE_KV.care_kv.baselines import FP16Adapter, CAREKVAdapter
 from eval_base_quantizer_expansion import run_one
@@ -45,9 +42,17 @@ def maxp_for(sl):
     return max(16, math.ceil(sl / 16) + 8)
 
 
+BASE_Q = "kivi_style"   # set from --base-quantizer; "kivi_style" honors the mixed override
+
+
 def carekv(sk, sv, rk, rv, maxp):
-    return CAREKVAdapter(mode="fixed", bits=3, base_quantizer="uniform", k_store_mode="post_rope",
-                         bits_k=3, bits_v=3, sk=sk, sv=sv, rk=rk, rv=rv, max_pages=maxp)
+    # base_quantizer="kivi_style" → side-buffer base whose store honors the K̂/V̂
+    # override (mixed-precision). "uniform" = production-style packed base (override
+    # NOT honored → mixed is a no-op; use to check deepseek CARE-KV stability without
+    # the kivi-base K-instability confound). correction_impl="vectorized" → fast path.
+    return CAREKVAdapter(mode="fixed", bits=3, base_quantizer=BASE_Q, k_store_mode="post_rope",
+                         bits_k=3, bits_v=3, sk=sk, sv=sv, rk=rk, rv=rv, max_pages=maxp,
+                         correction_impl="vectorized")
 
 
 def arm_spec(arm, maxp):
@@ -73,8 +78,11 @@ def main():
     ap.add_argument("--bits-hi", type=int, default=4)
     ap.add_argument("--bits-lo", type=int, default=2)
     ap.add_argument("--saliency", default="vnorm")
+    ap.add_argument("--base-quantizer", default="kivi_style")
     ap.add_argument("--models", nargs="+", required=True)
     A = ap.parse_args()
+    global BASE_Q
+    BASE_Q = A.base_quantizer
     os.makedirs(os.path.dirname(A.out_csv) or ".", exist_ok=True)
     rows, done = [], set()
     if os.path.exists(A.out_csv):
