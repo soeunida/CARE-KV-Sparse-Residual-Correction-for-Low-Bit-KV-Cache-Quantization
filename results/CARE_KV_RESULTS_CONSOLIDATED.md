@@ -141,6 +141,16 @@ CARE-KV's prefill is a per-(layer, kv_head, token) **Python loop** — prototype
 Settled negative (see §5). Hadamard pre-RoPE rotation + CARE-KV passed the TinyLlama screening gate (13.26 < 13.46 bar) but **does not transfer to 7B**: the de-risk on DeepSeek-7B regressed badly (rot_pre_carekv 10.47 ≫ uniform_carekv 9.27, worse even than base 9.71). The screening GO was a small-model artifact; on the primary hard target rotation hurts. **Conclusion: rotation and CARE-KV do not compose at scale** — no confirm run warranted.
 
 
+## 5f. LongBench (T5) — data unblocked, RUNTIME-blocked by prototype generation
+
+Data was unblocked (THUDM/LongBench `data.zip` → extracted trec/triviaqa/samsum, ~70 MB, fits the 5 GB free) and a generation+metric driver built (`eval_longbench_subset.py`, reusing the USE_CACHE=1 retrieval harness). But the eval is **not runnable at any useful scale**:
+
+- **CARE-KV generation is prototype-slow.** On TinyLlama, trec, max_ctx=768, **fp16 finished 3 samples in 10 s**, but the **CARE-KV-patched base_quant did NOT finish 3 samples in 600 s** (~200 s/sample — the per-token decode through the patched layer is the bottleneck). CARE-KV proper is slower still; a 7B model is far worse.
+- **TinyLlama is too weak for the task** (fp16 trec accuracy = 0.0), so the only model fast enough to run gives floor scores → the CARE-KV-vs-Base comparison would be uninformative even if it finished.
+
+→ A meaningful LongBench run needs a **capable (7B+) model**, which is **infeasibly slow** with CARE-KV's prototype generation (consistent with §5d). **LongBench is blocked on runtime, not data** — it requires the CUDA/Triton correction kernels before it is practical. Driver + data path are in place for when kernels land.
+
+
 ## 6. Honest paper positioning
 
 CARE-KV is a **reliable improvement over naive INT3 compression** (beats BaseQuant everywhere, across 11 architectures) but is **not** a TurboQuant-beater on raw PPL — the deficit is **structural** (un-rotated base + sparse capped residual + unstable K correction on outlier-heavy K). The strongest leads to narrow/flip the Turbo gap are (a) **rotation-CARE-KV** (in screening), (b) **combined_kvscore** selector (Mistral-only win), and (c) **K-correction stabilization** (clamp/norm-guard, untested at scale). A clean negative on rotation (substitutes, not complements) is itself a citable finding.

@@ -63,3 +63,4 @@ results/**/run.log.done
 results/**/*.log.done
 results/**/.bench_done
 results/**/.*_done
+data/longbench/

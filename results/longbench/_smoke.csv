@@ -1,0 +1,2 @@
+task,mode,n,max_ctx,score,runtime_s,status
+trec,fp16,3,768,0.0,10.2,real
