@@ -170,6 +170,7 @@ Re-running the exact production cell in the canonical `run_one` harness (`tools/
 - fp16/base/Turbo match exactly ⇒ same windowing, same Turbo. **Only CARE-KV differs** (7.516 vs production 7.614). The sole difference is the **correction kernel**: canonical `correction_impl=vectorized` (P5-full) vs the deleted `eac` harness's old `VDOM_ONLY` vectorization.
 - **Kernel verified faithful:** `tests/test_vectorized_carekv.py` — vectorized `joint+both` (the paper config) reproduces the `cached` reference loop at **Δ=1.79e-07 (31/31 checks)**. So **7.516 is the true cached CARE-KV**; production's 7.614 came from a non-faithful old kernel (~0.1 PPL inflation). *(CLAUDE.md §1's "joint+both falls back to cached" note is stale for this repo — P5-full handles joint+both bit-close.)*
 - Consequence: **with the faithful kernel, CARE-KV current beats Turbo (−0.070), and `combined_kvscore` beats Turbo by −0.175** on Mistral. `combined − current = −0.105`, consistent across NS=8/16/32/64 (robust selector win).
+- **Longer context confirms:** at SL1024 (NS=32) combined 6.241 also beats Turbo 6.372 (−0.131) and current 6.323 (−0.082) — the Turbo-beating margin is not an SL512 artifact.
 
 ### Corrected Pareto (Mistral SL512 NS=64)
 
