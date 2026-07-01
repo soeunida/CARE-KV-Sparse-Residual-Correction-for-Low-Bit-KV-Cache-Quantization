@@ -26,17 +26,26 @@ def main():
     ap.add_argument("--model-id", default="deepseek-ai/deepseek-llm-7b-base")
     ap.add_argument("--seq-len", type=int, default=512)
     ap.add_argument("--num-samples", type=int, default=4)
+    ap.add_argument("--sketch-dim", type=int, default=0,
+                    help=">0 overrides sketch_dim via CAREKV_SKETCH_DIM (attribution ablation)")
+    ap.add_argument("--carekv-only", action="store_true",
+                    help="skip fp16/base arms")
     args = ap.parse_args()
     maxp = args.seq_len // 16 + 8
+    if args.sketch_dim > 0:
+        os.environ["CAREKV_SKETCH_DIM"] = str(args.sketch_dim)   # picked up by apply_carekv_env_overrides
 
+    care_label = f"carekv_uniform_vec_sk{args.sketch_dim}" if args.sketch_dim > 0 else "carekv_uniform_vec"
     arms = [
         ("fp16", FP16Adapter()),
         ("base_int3", BaseQuantAdapter(bits=3)),
-        ("carekv_uniform_vec", CAREKVAdapter(
+        (care_label, CAREKVAdapter(
             mode="fixed", bits=3, base_quantizer="uniform",
             sk=2, sv=4, rk=2, rv=2, max_pages=maxp,
             correction_impl="vectorized")),
     ]
+    if args.carekv_only:
+        arms = [a for a in arms if a[0].startswith("carekv")]
     rows = []
     for label, ad in arms:
         t0 = time.perf_counter()
