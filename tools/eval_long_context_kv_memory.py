@@ -149,7 +149,7 @@ def main():
     peak = torch.cuda.max_memory_allocated() / 1e6 if device == "cuda" else 0.0
     print(f"  fp16              PPL={ppl:.4f} tok/s={tps:.1f} peak={peak:.0f}MB ({dt:.1f}s)")
     add_row("fp16", ppl, dt, tps, peak, dict(base_gb=fp16_gb, total_gb=fp16_gb), 16,
-            "real-7B", "Qwen2.5-7B fp16 reference at SL=1024")
+            "real-7B", f"{args.model} fp16 reference at SL={S}")
 
     # ── BaseQuant INT4 / INT3 on real 7B (model-agnostic per-group hook) ──
     for bits in (4, 3):
@@ -184,7 +184,7 @@ def main():
             peak_gpu_MB="", tokens_per_sec="", runtime_s="", k_reads="", v_reads="",
             status="memory-projected",
             note=f"7B KV memory projected (Part C estimator); PPL anchor = "
-                 f"{ppl_tiny} on TinyLlama SL=128 N=4 (Part A) — SL=1024 CARE-KV "
+                 f"{ppl_tiny} on TinyLlama SL=128 N=4 (Part A) — SL={S} CARE-KV "
                  f"PPL infeasible with Python-loop prototype"))
 
     os.makedirs(os.path.dirname(args.out_csv) or ".", exist_ok=True)

@@ -1,0 +1,2 @@
+model,dataset,dataset_config,dataset_split,seq_len,num_samples,base_bits,prefill_mode,route_policy,correction_impl,packed_base,scale_quant,store_abs_k,store_abs_v,read_abs_k,read_abs_v,mode,ppl,total_tokens,seconds,K_reads,V_reads,peak_gpu_mem_MB
+deepseek-ai/deepseek-llm-7b-base,wikitext,wikitext-2-raw-v1,test,4096,8,3,fp,joint,cached,1,int8,-,-,-,-,fp16,6.423302,32760,5.66,0,0,18896.02
