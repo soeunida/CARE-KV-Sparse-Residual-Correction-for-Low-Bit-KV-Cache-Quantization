@@ -91,7 +91,8 @@ def main():
     MID = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
     tok = AutoTokenizer.from_pretrained(MID)
     a = CAREKVAdapter(mode="fixed", bits=3, base_quantizer="uniform",
-                      sk=2, sv=4, rk=2, rv=2, max_pages=16)
+                      sk=2, sv=4, rk=2, rv=2,
+                      max_pages=(args.seq_len + 15) // 16 + 8)
     reset_debug_stats()
     reset_peak_gpu()
     m = a.setup_model(MID)

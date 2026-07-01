@@ -1,0 +1,16 @@
+model_id,dataset,seq_len,num_samples,mode,baseline_score,ppl,total_tokens,k_reads,v_reads,seconds,peak_gpu_mem_MB,imp_gini,imp_norm_entropy,imp_top1pct_mass,status,notes
+mistralai/Mistral-7B-v0.3,pg19,512,2,fp16,-,5.6697,1022,0,0,20.5,14710.0,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,512,2,turboquant_int3,-,6.1264,1022,0,0,35.9,14793.0,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,512,2,base_quant_int3,-,6.2121,1022,0,0,106.0,24421.1,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,1024,2,fp16,-,5.8306,2046,0,0,24.8,14915.7,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,1024,2,turboquant_int3,-,6.3508,2046,0,0,33.2,15350.6,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,1024,2,base_quant_int3,-,6.3988,2046,0,0,184.4,24707.0,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,2048,2,fp16,-,5.881,4094,0,0,38.1,15326.8,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,2048,2,turboquant_int3,-,6.5435,4094,0,0,35.5,17274.4,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,2048,2,base_quant_int3,-,6.5854,4094,0,0,396.9,25751.9,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,4096,2,fp16,-,5.9281,8190,0,0,24.8,16148.9,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,4096,2,turboquant_int3,-,6.6324,8190,0,0,24.7,24355.8,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,4096,2,base_quant_int3,-,6.7232,8190,0,0,715.1,29464.9,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,8192,2,fp16,-,5.8579,16382,0,0,35.2,17793.1,,,,real,
+mistralai/Mistral-7B-v0.3,pg19,8192,2,turboquant_int3,-,,,,,,,,,,error:OutOfMemoryError,"CUDA out of memory. Tried to allocate 4.00 GiB. GPU 0 has a total capacity of 47.43 GiB of which 3.16 GiB is free. Including non-PyTorch memory, this process has 44.26 GiB memory in use. Of the alloca"
+mistralai/Mistral-7B-v0.3,pg19,8192,2,base_quant_int3,-,6.599,16382,0,0,1328.2,43383.8,,,,real,

@@ -1,0 +1,8 @@
+model_id,dataset,seq_len,num_samples,mode,baseline_score,ppl,total_tokens,k_reads,v_reads,seconds,peak_gpu_mem_MB,status,notes
+mistralai/Mistral-7B-v0.3,pg19,512,8,fp16,-,6.8774,4088,0,0,57.1,14710.0,real,
+mistralai/Mistral-7B-v0.3,pg19,512,8,base_quant_int3,-,7.5469,4088,0,0,387.0,24420.9,real,
+mistralai/Mistral-7B-v0.3,pg19,512,8,turboquant_int3,-,7.5145,4088,0,0,28.3,14793.0,real,
+mistralai/Mistral-7B-v0.3,pg19,1024,8,fp16,-,6.6349,8184,0,0,30.8,14915.7,real,
+mistralai/Mistral-7B-v0.3,pg19,1024,8,base_quant_int3,-,7.3574,8184,0,0,699.5,24707.0,real,
+mistralai/Mistral-7B-v0.3,pg19,1024,8,turboquant_int3,-,7.2613,8184,0,0,30.4,15350.6,real,
+mistralai/Mistral-7B-v0.3,pg19,2048,8,fp16,-,6.3214,16376,0,0,31.5,15326.8,real,

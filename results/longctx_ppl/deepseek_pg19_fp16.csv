@@ -1,0 +1,4 @@
+model_id,dataset,seq_len,num_samples,mode,baseline_score,ppl,total_tokens,k_reads,v_reads,seconds,peak_gpu_mem_MB,status,notes
+deepseek-ai/deepseek-llm-7b-base,pg19,1024,4,fp16,-,7.1577,4092,0,0,30.8,15095.5,real,
+deepseek-ai/deepseek-llm-7b-base,pg19,4096,4,fp16,-,7.1121,16380,0,0,20.6,18895.6,real,
+deepseek-ai/deepseek-llm-7b-base,pg19,8192,4,fp16,-,114.2284,32764,0,0,19.8,23962.4,real,

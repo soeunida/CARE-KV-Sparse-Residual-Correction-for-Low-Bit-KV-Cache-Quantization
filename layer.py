@@ -93,6 +93,11 @@ _DEBUG_STATS: Dict[str, Any] = {
     "v_slots_read": 0, "k_slots_read": 0, "n_queries": 0,
     "delta_v_norm_sum": 0.0, "delta_k_norm_sum": 0.0,
     "delta_o_norm_sum": 0.0, "o_base_norm_sum": 0.0,
+    # Token-importance dispersion (CAREKV_DUMP_IMPORTANCE=1): per (layer,kv_head)
+    # dispersion of the per-key attention mass — the "token importance" the
+    # query-aware router selects over. Averaged via imp_count.
+    "imp_gini_sum": 0.0, "imp_norm_entropy_sum": 0.0,
+    "imp_top1pct_mass_sum": 0.0, "imp_count": 0,
 }
 
 def _debug_stats_enabled() -> bool:
@@ -453,6 +458,30 @@ class CAREKVLayer(nn.Module):
         Hq, T, D = q_post.shape
         Hkv = cfg.num_kv_heads
         kv_group = Hq // Hkv
+
+        # ── Token-importance dispersion probe (CAREKV_DUMP_IMPORTANCE=1) ──
+        # Mechanism measurement for "query-aware benefit grows with SL": the
+        # per-key attention mass (importance the router ranks over) concentrates
+        # as context grows. Cheap single reduction over the base attention.
+        if os.environ.get("CAREKV_DUMP_IMPORTANCE", "0") == "1" and _debug_stats_enabled():
+            with torch.no_grad():
+                mass = attn_w.float().sum(dim=(0, 1))          # (N_total,)
+                tot = mass.sum().clamp_min(1e-9)
+                p = (mass / tot)
+                N = p.numel()
+                # normalized entropy in [0,1]; lower = more concentrated
+                ent = -(p * (p + 1e-12).log()).sum() / math.log(max(N, 2))
+                # Gini of the mass distribution; higher = more concentrated
+                sm, _ = torch.sort(mass)
+                idx = torch.arange(1, N + 1, device=sm.device, dtype=sm.dtype)
+                gini = ((2 * idx - N - 1) * sm).sum() / (N * sm.sum().clamp_min(1e-9))
+                # fraction of mass held by the top-1% of keys
+                k1 = max(1, N // 100)
+                top1 = torch.topk(mass, k1).values.sum() / tot
+                _DEBUG_STATS["imp_gini_sum"] += float(gini.item())
+                _DEBUG_STATS["imp_norm_entropy_sum"] += float(ent.item())
+                _DEBUG_STATS["imp_top1pct_mass_sum"] += float(top1.item())
+                _DEBUG_STATS["imp_count"] += 1
 
         kind = os.environ.get("CAREKV_PREFILL_RESIDUAL_KIND", "both").lower()
         if kind not in {"v", "k", "both"}:

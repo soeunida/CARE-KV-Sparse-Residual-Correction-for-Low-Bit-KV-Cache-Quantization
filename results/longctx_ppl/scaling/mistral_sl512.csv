@@ -1,0 +1,3 @@
+model_id,dataset,seq_len,num_samples,mode,baseline_score,ppl,total_tokens,k_reads,v_reads,seconds,peak_gpu_mem_MB,imp_gini,imp_norm_entropy,imp_top1pct_mass,status,notes
+mistralai/Mistral-7B-v0.3,pg19,512,2,carekv_qaware,carekv,6.054,1022,1804053,2390251,390.1,20586.8,0.74781,0.54596,0.61698,real,
+mistralai/Mistral-7B-v0.3,pg19,512,2,carekv_random,random,6.054,1022,1804053,2390251,306.2,20586.8,0.74781,0.54596,0.61698,real,

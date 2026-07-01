@@ -1,0 +1,4 @@
+model_id,dataset,seq_len,num_samples,mode,baseline_score,ppl,total_tokens,k_reads,v_reads,seconds,peak_gpu_mem_MB,imp_gini,imp_norm_entropy,imp_top1pct_mass,status,notes
+mistralai/Mistral-7B-v0.3,pg19,512,2,carekv_magnitude,oracle_residual_magnitude,6.0618,1022,1968128,2226176,290.9,20586.8,0.75124,0.54002,0.62339,real,
+mistralai/Mistral-7B-v0.3,pg19,1024,2,carekv_magnitude,oracle_residual_magnitude,6.4312,2046,3608576,4780032,1005.4,23028.8,0.74162,0.52079,0.60884,real,
+mistralai/Mistral-7B-v0.3,pg19,2048,2,carekv_magnitude,oracle_residual_magnitude,6.6548,4094,7168000,9609216,3471.4,28139.4,0.73244,0.54791,0.59115,real,
