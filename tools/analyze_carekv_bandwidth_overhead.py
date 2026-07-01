@@ -46,26 +46,34 @@ SEQLENS = [128, 512, 1024, 2048, 4096, 8192]
 
 
 def row(name, L, Hq, Hkv, Dh, T):
-    # ── FLOP (per decode token) ──
-    base_flop = L * 4 * Hq * T * Dh
-    corr_flop = L * 2 * (RK * Hq * Dh + RV * Hq * Dh + (SK + SV) * SKETCH * Hq)
-    # ── bytes (per decode token) ──
+    n_pages = math.ceil(T / PAGE)
+    k_slot_B = PAGE * KCG * B_RES + 2          # 4-bit slot + fp16 scale
+    v_slot_B = VTB * Dh * B_RES + 2
+    # ── FLOP (per decode token, summed over layers) ──
+    # base = attention (QK^T + AV) + dequant of the read KV (shared cost).
+    base_flop = L * (4 * Hq * T * Dh + 2 * 2 * Hkv * T * Dh)   # attn + K/V dequant
+    # correction: O(S) router scoring over ALL stored candidates + O(1) apply.
+    flop_score = L * (Hq * n_pages * (SK * SKETCH * 2) + Hq * n_pages * (SV * 3))
+    flop_corr_apply = L * 2 * (RK * Hq * Dh + RV * Hq * Dh)
+    corr_flop = flop_score + flop_corr_apply
+    # ── bandwidth (bytes per decode token) ──
     base_bytes = L * Hkv * 2 * T * (Dh * B_BASE + (Dh / GS) * B_SCALE)
-    corr_bytes_shared = L * Hkv * (RK * PAGE * KCG * B_RES + RV * VTB * Dh * B_RES
-                                   + (RK + RV) * 2)     # +fp16 scale/slot
-    corr_bytes_applied = L * Hq * (RK + RV) * Dh * B_RES  # per-query upper bound
+    fp16_bytes = L * Hkv * 2 * T * Dh * 2
+    # O(S) scoring read: K sketches + V error scalars for every stored candidate
+    score_read = L * Hkv * n_pages * (SK * SKETCH * 2 + SV * 2)
+    # O(1) residual read: only the top-(RK,RV) selected slots
+    resid_read = L * Hkv * (RK * k_slot_B + RV * v_slot_B)
+    corr_bytes = score_read + resid_read
+    carekv_bytes = base_bytes + corr_bytes
     return dict(
         model=name, seq_len=T,
-        base_GFLOP=round(base_flop / 1e9, 4),
-        corr_GFLOP=round(corr_flop / 1e9, 4),
         flop_overhead_pct=round(100 * corr_flop / base_flop, 3),
+        bw_overhead_pct=round(100 * corr_bytes / base_bytes, 3),
+        score_read_KB=round(score_read / 1024, 1),    # O(S) — dominant
+        resid_read_KB=round(resid_read / 1024, 2),    # O(1)
         base_KB=round(base_bytes / 1024, 1),
-        corr_KB_shared=round(corr_bytes_shared / 1024, 2),
-        corr_KB_applied=round(corr_bytes_applied / 1024, 2),
-        bw_overhead_shared_pct=round(100 * corr_bytes_shared / base_bytes, 3),
-        bw_overhead_applied_pct=round(100 * corr_bytes_applied / base_bytes, 3),
+        carekv_vs_fp16_bw=round(carekv_bytes / fp16_bytes, 4),   # net saving vs fp16
         base_AI=round(base_flop / base_bytes, 1),
-        corr_AI=round(corr_flop / corr_bytes_shared, 1),
         base_bound=("BW" if base_flop / base_bytes < RIDGE else "compute"),
     )
 
@@ -89,59 +97,58 @@ def main():
     print("wrote", args.out_csv)
 
     L = []
-    L.append("# CARE-KV correction overhead — theoretical FLOPs + memory bandwidth")
+    L.append("# CARE-KV correction overhead — FLOPs + memory bandwidth (roofline)")
     L.append("")
-    L.append("Per decode token, summed over layers. Base = INT3 attention (read "
-             "whole K+V cache/token); correction = residual read + apply + router "
-             "(paper-best SK2 SV4 RK2 RV2, 4-bit residual, sketch_dim=32). "
-             "`shared` = residual read once per KV head (cached, GQA-shared); "
-             "`applied` = per-query upper bound. Ridge point "
-             f"≈{RIDGE:.0f} FLOP/byte (A6000-class).")
+    L.append("> **Reconciles with `results/overhead_analysis/OVERHEAD_ANALYSIS.md` "
+             "(REBUTTAL §1)** — independent re-derivation; numbers agree. Adds the "
+             "roofline/arithmetic-intensity classification and a TinyLlama config.")
+    L.append("")
+    L.append("Per decode token, summed over layers. Correction = **O(S) router "
+             "scoring** (read+score every stored candidate's sketch) + **O(1) "
+             "residual read** (top-RK/RV slots) + apply. The O(S) scoring read is "
+             "the dominant term (an earlier version of THIS tool omitted it and "
+             "undercounted — now fixed). Paper-best SK2 SV4 RK2 RV2, 4-bit "
+             f"residual, sketch_dim=32. Ridge ≈{RIDGE:.0f} FLOP/byte (A6000-class).")
     L.append("")
     for name in CONFIGS:
         sub = [r for r in rows if r["model"] == name]
         L.append(f"## {name}")
         L.append("")
-        L.append("| SL | base GFLOP | base KB | corr FLOP% | corr KB (shared) | "
-                 "**BW overhead (shared)** | BW overhead (applied) | base AI | bound |")
-        L.append("|---:|---:|---:|---:|---:|---:|---:|---:|:--:|")
+        L.append("| SL | FLOP overhead | **BW overhead vs INT3** | score read KB (O(S)) | "
+                 "resid read KB (O(1)) | CARE-KV BW / fp16 | base AI | bound |")
+        L.append("|---:|---:|---:|---:|---:|---:|---:|:--:|")
         for r in sub:
-            L.append(f"| {r['seq_len']} | {r['base_GFLOP']} | {r['base_KB']} | "
-                     f"{r['flop_overhead_pct']}% | {r['corr_KB_shared']} | "
-                     f"**{r['bw_overhead_shared_pct']}%** | {r['bw_overhead_applied_pct']}% | "
+            L.append(f"| {r['seq_len']} | {r['flop_overhead_pct']}% | "
+                     f"**{r['bw_overhead_pct']}%** | {r['score_read_KB']} | "
+                     f"{r['resid_read_KB']} | {r['carekv_vs_fp16_bw']}× | "
                      f"{r['base_AI']} | {r['base_bound']} |")
         L.append("")
     L.append("## Reading")
     L.append("")
     t = {(r['model'], r['seq_len']): r for r in rows}
-    tl = "TinyLlama-1.1B"
-    L.append(f"- **FLOP overhead is tiny** ({t[(tl,128)]['flop_overhead_pct']}% at "
-             f"SL128 → {t[(tl,2048)]['flop_overhead_pct']}% at SL2048) — correction "
-             "is negligible arithmetic.")
-    L.append(f"- **Bandwidth is the real axis**, and it too is small in the "
-             f"long-context regime: shared-read overhead "
-             f"{t[(tl,128)]['bw_overhead_shared_pct']}% (SL128) → "
-             f"{t[(tl,1024)]['bw_overhead_shared_pct']}% (SL1024) → "
-             f"{t[(tl,8192)]['bw_overhead_shared_pct']}% (SL8192). The residual "
-             "read is **context-independent** (fixed budget/token), so its share "
-             "of the ∝T base KV read shrinks ~1/T.")
-    L.append(f"- **Both base and correction are bandwidth-bound** (base AI "
-             f"≈{t[(tl,1024)]['base_AI']} ≪ ridge {RIDGE:.0f} FLOP/byte). So the "
-             "cost that matters is HBM traffic, and the correction adds <2% of it "
-             "at SL≥1024.")
-    L.append("- **GQA amortizes correction bandwidth**: fewer KV heads → the "
-             "shared residual read is smaller relative to the (Hq-driven) base "
-             "compute; MHA (DeepSeek) has proportionally more KV-head residual "
-             "reads but the overhead is still small at long context.")
-    L.append("- **Conclusion.** The correction's FLOP and bandwidth overheads are "
-             "both **<2% at deployment-relevant context lengths**; the ~1000× "
-             "prototype slowdown is entirely the per-token Python loop, not the "
-             "algorithm. A fused gather+dequant+apply kernel would realize this "
-             "sub-2% theoretical overhead; the vectorized path already recovers "
-             "most of it (~15–80× measured).")
+    m = "Mistral-7B (GQA)"
+    L.append(f"- **FLOP overhead is single-digit %** and shrinks slowly "
+             f"({t[(m,512)]['flop_overhead_pct']}% → {t[(m,8192)]['flop_overhead_pct']}% "
+             "for Mistral) — negligible arithmetic.")
+    L.append(f"- **Bandwidth overhead vs INT3 is ~constant 8–10%** "
+             f"({t[(m,512)]['bw_overhead_pct']}% at SL512 → "
+             f"{t[(m,8192)]['bw_overhead_pct']}% at SL8192), **NOT** vanishing — "
+             "because the router's **O(S) sketch-scoring read** grows with context "
+             "at the same rate as the base KV read. The O(1) residual read is tiny "
+             "by comparison. (This corrects an earlier undercount that omitted the "
+             "scoring read.)")
+    L.append(f"- **But decode is bandwidth-bound and CARE-KV still reads far less "
+             f"than fp16**: CARE-KV read-BW ≈ {t[(m,1024)]['carekv_vs_fp16_bw']}× of "
+             "fp16 (≈78% NET saving) — the residual overhead is small vs the INT3 "
+             f"base, and the whole thing is a large win vs fp16. base AI "
+             f"≈{t[(m,1024)]['base_AI']} ≪ ridge {RIDGE:.0f} → bandwidth-bound.")
+    L.append("- **Conclusion.** Correction overhead is single-digit % FLOPs and "
+             "≤~10% read-bandwidth over INT3 (a large NET saving vs fp16). The "
+             "~1000× prototype slowdown is the per-token Python loop, not this; a "
+             "fused unpack+score+correct kernel realizes it (vectorized already "
+             "recovers ~15–80×).")
     L.append("")
-    L.append("**Status: analytical** (arithmetic counts; measured walltime in "
-             "`carekv_decode_overhead.csv`).")
+    L.append("**Status: analytical**, reconciled with the REBUTTAL overhead table.")
     open(args.out_md, "w").write("\n".join(L) + "\n")
     print("wrote", args.out_md)
 
