@@ -1,0 +1,17 @@
+model_id,method,kv_MB,mem_frac_fp16,ppl,pareto,dominated_by,seq_len
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,BaseQuant_INT3,2.341,0.203,13.195,dominated,TurboQuant_INT3,512
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,TurboQuant_INT3,2.341,0.203,11.6754,on-front,,512
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,CARE-KV_SK2SV4,2.653,0.23,11.3229,on-front,,512
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,fp16,11.534,1.0,9.8423,on-front,,512
+01-ai/Yi-6B,BaseQuant_INT3,6.812,0.203,8.6954,dominated,TurboQuant_INT3,512
+01-ai/Yi-6B,TurboQuant_INT3,6.812,0.203,8.2555,on-front,,512
+01-ai/Yi-6B,CARE-KV_SK2SV4,7.718,0.23,8.4272,dominated,TurboQuant_INT3,512
+01-ai/Yi-6B,fp16,33.554,1.0,7.9516,on-front,,512
+mistralai/Mistral-7B-v0.3,BaseQuant_INT3,13.623,0.203,7.2972,on-front,,512
+mistralai/Mistral-7B-v0.3,TurboQuant_INT3,13.623,0.203,7.4885,dominated,BaseQuant_INT3,512
+mistralai/Mistral-7B-v0.3,CARE-KV_SK2SV4,15.435,0.23,7.124,on-front,,512
+mistralai/Mistral-7B-v0.3,fp16,67.109,1.0,6.7854,on-front,,512
+upstage/SOLAR-10.7B-v1.0,BaseQuant_INT3,20.435,0.203,6.1639,dominated,TurboQuant_INT3,512
+upstage/SOLAR-10.7B-v1.0,TurboQuant_INT3,20.435,0.203,6.0223,on-front,,512
+upstage/SOLAR-10.7B-v1.0,CARE-KV_SK2SV4,23.153,0.23,5.9853,on-front,,512
+upstage/SOLAR-10.7B-v1.0,fp16,100.663,1.0,5.6968,on-front,,512

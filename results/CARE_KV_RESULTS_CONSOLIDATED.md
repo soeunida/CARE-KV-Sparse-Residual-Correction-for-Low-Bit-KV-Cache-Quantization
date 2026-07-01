@@ -151,6 +151,24 @@ Data was unblocked (THUDM/LongBench `data.zip` → extracted trec/triviaqa/samsu
 → A meaningful LongBench run needs a **capable (7B+) model**, which is **infeasibly slow** with CARE-KV's prototype generation (consistent with §5d). **LongBench is blocked on runtime, not data** — it requires the CUDA/Triton correction kernels before it is practical. Driver + data path are in place for when kernels land.
 
 
+## 5g. Memory–PPL Pareto — CARE-KV does NOT dominate TurboQuant
+
+All INT3 methods cluster in a narrow KV-memory band (fraction of fp16): BaseQuant ≈ 0.203×, TurboQuant ≈ 0.203× (QJL qjl_m=0 stores no residual), CARE-KV ≈ 0.230× (base + ~13% residual). The differentiator is PPL, so the Pareto verdict follows the PPL verdict:
+
+| method | mem × fp16 | vs Turbo (rigorous NS=64) |
+|---|---|---|
+| BaseQuant_INT3 | 0.203 | worse PPL |
+| **TurboQuant_INT3** | **0.203** | **Pareto front** |
+| CARE-KV_SK2SV4 | 0.230 | worse PPL **and** more memory → **dominated** |
+| fp16 | 1.000 | (anchor) |
+
+- **At the rigorous NS=64, CARE-KV is Pareto-dominated by TurboQuant** — Turbo uses *less* memory (no residual) *and* achieves *better* PPL (§1: 0W/12L). Memory framing does **not** rescue the Turbo comparison.
+- CARE-KV's only robust Pareto value is **over BaseQuant**: +13% memory for a large PPL gain (a valid Base→fp16 intermediate).
+- (At GQA N=4 CARE-KV appears on-front in 3/4 models because its noisy N=4 PPL beats Turbo's — but this flips at NS=64; NS-fragile, see §1.)
+
+→ **Honest positioning:** CARE-KV is a competitive INT3 memory point that reliably beats the naive INT3 baseline and **composes** with orthogonal methods (eviction ✓ §5b, mixed-precision ~ §5c) — a property score-level QJL/TurboQuant lacks — but it does **not** win on the raw quality/memory Pareto. The contribution is the *value-level, output-error-aware, composable* correction, not a Pareto-dominance claim.
+
+
 ## 6. Honest paper positioning
 
 CARE-KV is a **reliable improvement over naive INT3 compression** (beats BaseQuant everywhere, across 11 architectures) but is **not** a TurboQuant-beater on raw PPL — the deficit is **structural** (un-rotated base + sparse capped residual + unstable K correction on outlier-heavy K). The strongest leads to narrow/flip the Turbo gap are (a) **rotation-CARE-KV** (in screening), (b) **combined_kvscore** selector (Mistral-only win), and (c) **K-correction stabilization** (clamp/norm-guard, untested at scale). A clean negative on rotation (substitutes, not complements) is itself a citable finding.
