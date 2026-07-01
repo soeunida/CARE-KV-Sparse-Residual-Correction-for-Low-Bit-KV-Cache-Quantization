@@ -1,0 +1,10 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,k_reads,v_reads,runtime_s,status
+mistralai/Mistral-7B-v0.3,512,32,fp16,6.7697,,,,0,0,46.8,real
+mistralai/Mistral-7B-v0.3,512,32,base_int3,7.2987,,,,0,0,1656.7,real
+mistralai/Mistral-7B-v0.3,512,32,turbo_int3,7.2545,,,,0,0,61.3,real
+mistralai/Mistral-7B-v0.3,512,32,carekv_current,7.1152,,,,29016862,38092002,2778.0,real
+mistralai/Mistral-7B-v0.3,512,32,carekv_combined,7.0111,,,,27889344,39219520,2870.7,real
+mistralai/Mistral-7B-v0.3,1024,32,fp16,6.0232,,,,0,0,45.4,real
+mistralai/Mistral-7B-v0.3,1024,32,base_int3,6.4727,,,,0,0,2956.3,real
+mistralai/Mistral-7B-v0.3,1024,32,turbo_int3,6.3719,,,,0,0,83.9,real
+mistralai/Mistral-7B-v0.3,1024,32,carekv_current,6.3233,,,,57947105,76270623,6629.8,real

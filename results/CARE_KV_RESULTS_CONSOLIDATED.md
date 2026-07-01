@@ -151,25 +151,49 @@ Data was unblocked (THUDM/LongBench `data.zip` → extracted trec/triviaqa/samsu
 → A meaningful LongBench run needs a **capable (7B+) model**, which is **infeasibly slow** with CARE-KV's prototype generation (consistent with §5d). **LongBench is blocked on runtime, not data** — it requires the CUDA/Triton correction kernels before it is practical. Driver + data path are in place for when kernels land.
 
 
-## 5g. Memory–PPL Pareto — CARE-KV does NOT dominate TurboQuant
+## 5g. Memory–PPL Pareto vs TurboQuant — **CORRECTED**: the earlier "dominated" verdict was a stale-kernel artifact
 
-All INT3 methods cluster in a narrow KV-memory band (fraction of fp16): BaseQuant ≈ 0.203×, TurboQuant ≈ 0.203× (QJL qjl_m=0 stores no residual), CARE-KV ≈ 0.230× (base + ~13% residual). The differentiator is PPL, so the Pareto verdict follows the PPL verdict:
+**Prior claim (superseded):** the production grid (old `eac`/`ezoo` harness) reported CARE-KV losing to TurboQuant at NS=64 (0W/12L) → "Pareto-dominated." A same-harness reproduction shows that verdict was a **correction-kernel artifact**, not a real deficit.
 
-| method | mem × fp16 | vs Turbo (rigorous NS=64) |
-|---|---|---|
-| BaseQuant_INT3 | 0.203 | worse PPL |
-| **TurboQuant_INT3** | **0.203** | **Pareto front** |
-| CARE-KV_SK2SV4 | 0.230 | worse PPL **and** more memory → **dominated** |
-| fp16 | 1.000 | (anchor) |
+### Kernel-dependence reproduction (run_one harness, Mistral-7B-v0.3, SL512, NS=64)
 
-- **At the rigorous NS=64, CARE-KV is Pareto-dominated by TurboQuant** — Turbo uses *less* memory (no residual) *and* achieves *better* PPL (§1: 0W/12L). Memory framing does **not** rescue the Turbo comparison.
-- CARE-KV's only robust Pareto value is **over BaseQuant**: +13% memory for a large PPL gain (a valid Base→fp16 intermediate).
-- (At GQA N=4 CARE-KV appears on-front in 3/4 models because its noisy N=4 PPL beats Turbo's — but this flips at NS=64; NS-fragile, see §1.)
+Re-running the exact production cell in the canonical `run_one` harness (`tools/eval_combined_vs_turbo.py`), the fp16/base/Turbo references reproduce production **to 4 decimals** (windowing identical) — but CARE-KV does **not**:
 
-→ **Honest positioning:** CARE-KV is a competitive INT3 memory point that reliably beats the naive INT3 baseline and **composes** with orthogonal methods (eviction ✓ §5b, mixed-precision ~ §5c) — a property score-level QJL/TurboQuant lacks — but it does **not** win on the raw quality/memory Pareto. The contribution is the *value-level, output-error-aware, composable* correction, not a Pareto-dominance claim.
+| arm | run_one NS=64 | production NS=64 (old eac) | Δ turbo | Δ current |
+|---|---|---|---|---|
+| fp16 | 7.1564 | 7.156 ✅ | — | — |
+| base_int3 | 7.6753 | 7.675 ✅ | — | — |
+| **turbo_int3** | **7.5862** | 7.586 ✅ | 0 | — |
+| carekv_current | **7.5164** | 7.614 ❌ (**+0.098**) | **−0.070** ✓ | 0 |
+| **carekv_combined** (KSCORE_LIVE) | **7.411** | — | **−0.175** ✓✓ | **−0.105** |
+
+- fp16/base/Turbo match exactly ⇒ same windowing, same Turbo. **Only CARE-KV differs** (7.516 vs production 7.614). The sole difference is the **correction kernel**: canonical `correction_impl=vectorized` (P5-full) vs the deleted `eac` harness's old `VDOM_ONLY` vectorization.
+- **Kernel verified faithful:** `tests/test_vectorized_carekv.py` — vectorized `joint+both` (the paper config) reproduces the `cached` reference loop at **Δ=1.79e-07 (31/31 checks)**. So **7.516 is the true cached CARE-KV**; production's 7.614 came from a non-faithful old kernel (~0.1 PPL inflation). *(CLAUDE.md §1's "joint+both falls back to cached" note is stale for this repo — P5-full handles joint+both bit-close.)*
+- Consequence: **with the faithful kernel, CARE-KV current beats Turbo (−0.070), and `combined_kvscore` beats Turbo by −0.175** on Mistral. `combined − current = −0.105`, consistent across NS=8/16/32/64 (robust selector win).
+
+### Corrected Pareto (Mistral SL512 NS=64)
+
+| method | mem × fp16 | PPL | Pareto |
+|---|---|---|---|
+| BaseQuant_INT3 | 0.203 | 7.675 | dominated |
+| TurboQuant_INT3 | **0.203** | 7.586 | on-front (cheapest) |
+| CARE-KV current | 0.230 | 7.516 | **on-front** (better PPL, +0.027 mem) |
+| **CARE-KV combined** | 0.230 | **7.411** | **on-front** (best PPL) |
+| fp16 | 1.000 | 7.156 | (anchor) |
+
+- **CARE-KV is no longer Pareto-dominated on Mistral.** Turbo and CARE-KV form a genuine **quality↔memory trade-off**: Turbo is cheapest (0.203×), CARE-KV combined has the best INT3 PPL (7.411, +0.027× memory). Neither dominates.
+- The memory fractions (BaseQuant/Turbo 0.203×, CARE-KV 0.230×) are unchanged and still analytic-validated; only the **PPL side of the comparison** is corrected.
+
+### Honest scope / open items
+
+- **Verified:** kernel faithfulness (pytest Δ~1e-7); windowing identity (fp16/base/Turbo exact match); combined > current robust across 4 NS values.
+- **Single model:** this reproduction is **Mistral-only**. Whether the faithful kernel also flips the other 11 models (many of which have heavier K-outliers → structurally harder for CARE-KV) is **not yet re-run** — the eac harness is deleted/unrecoverable, so the full grid must be re-run in `run_one` before generalizing.
+- **In flight:** an eval-level `cached` vs `vectorized` PPL check (NS=8) is running to reconfirm the unit-level faithfulness at the eval level (unit test already conclusive at Δ~1e-7).
+
+→ **Revised positioning:** CARE-KV beats naive INT3 everywhere **and** — with the faithful correction kernel — the `combined_kvscore` selector **beats TurboQuant on Mistral** at rigorous NS=64 (first robust Turbo-beating case), sitting on the quality↔memory Pareto front rather than under it. It additionally **composes** with orthogonal methods (eviction ✓ §5b, mixed-precision ~ §5c), which score-level QJL/TurboQuant cannot. The earlier "Turbo Pareto-dominates CARE-KV" line was an artifact of a non-faithful vectorization kernel and is retracted for Mistral; generalization to the full model set remains to be re-run.
 
 
 ## 6. Honest paper positioning
 
-CARE-KV is a **reliable improvement over naive INT3 compression** (beats BaseQuant everywhere, across 11 architectures) but is **not** a TurboQuant-beater on raw PPL — the deficit is **structural** (un-rotated base + sparse capped residual + unstable K correction on outlier-heavy K). The strongest leads to narrow/flip the Turbo gap are (a) **rotation-CARE-KV** (in screening), (b) **combined_kvscore** selector (Mistral-only win), and (c) **K-correction stabilization** (clamp/norm-guard, untested at scale). A clean negative on rotation (substitutes, not complements) is itself a citable finding.
+CARE-KV is a **reliable improvement over naive INT3 compression** (beats BaseQuant everywhere, across 11 architectures). On **Mistral at rigorous NS=64, `combined_kvscore` now beats TurboQuant (−0.175 PPL)** with the faithful correction kernel (§5g) — the first robust Turbo-beating case; the earlier "Turbo Pareto-dominates" verdict was a stale-kernel artifact and is retracted for Mistral. **Generalization is still open:** the full-grid "0W/12L vs Turbo" was measured on the now-deleted `eac` harness with a non-faithful kernel, so the other 11 models (many outlier-heavier → structurally harder) must be **re-run in `run_one`** before claiming a general Turbo win. The remaining structural risks on hard models (un-rotated base + sparse capped residual + unstable K correction on outlier-heavy K) are unchanged. Further leads: (a) **rotation-CARE-KV** (in screening, NO-GO at 7B §5e), (b) **K-correction stabilization** (clamp/norm-guard, untested at scale). A clean negative on rotation (substitutes, not complements) is itself a citable finding.
 
