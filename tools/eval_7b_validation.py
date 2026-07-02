@@ -30,6 +30,10 @@ def main():
                     help=">0 overrides sketch_dim via CAREKV_SKETCH_DIM (attribution ablation)")
     ap.add_argument("--carekv-only", action="store_true",
                     help="skip fp16/base arms")
+    ap.add_argument("--arm", choices=["fp16", "base_int3", "carekv"], default=None,
+                    help="run ONLY this arm (separate-process isolation for big "
+                         "models); appends to --out-csv so 3 sequential runs "
+                         "build the full table with fresh memory each")
     args = ap.parse_args()
     maxp = args.seq_len // 16 + 8
     if args.sketch_dim > 0:
@@ -46,6 +50,9 @@ def main():
     ]
     if args.carekv_only:
         arms = [a for a in arms if a[0].startswith("carekv")]
+    if args.arm:
+        want = "carekv" if args.arm == "carekv" else args.arm
+        arms = [a for a in arms if a[0].startswith(want)]
     rows = []
     for label, ad in arms:
         t0 = time.perf_counter()
@@ -61,6 +68,18 @@ def main():
     for d in rows:
         for k in d:
             if k not in keys: keys.append(k)
+    # --arm isolation: append (write header only for a new file) so 3 sequential
+    # single-arm processes accumulate into one CSV without a stale full-run header.
+    append = bool(args.arm) and os.path.exists(args.out_csv)
+    if append:
+        import csv as _csv
+        existing = list(_csv.DictReader(open(args.out_csv)))
+        # drop any prior row for this same arm (idempotent re-run)
+        existing = [r for r in existing if r.get("arm") not in {a[0] for a in arms}]
+        for r in existing:
+            for k in r:
+                if k not in keys: keys.append(k)
+        rows = existing + rows
     with open(args.out_csv, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys, extrasaction="ignore")
         w.writeheader()

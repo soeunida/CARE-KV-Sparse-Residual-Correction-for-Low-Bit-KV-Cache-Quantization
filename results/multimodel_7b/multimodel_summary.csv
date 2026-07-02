@@ -1,0 +1,10 @@
+model_id,arm,ppl,k_reads,v_reads,seq_len,num_samples
+NousResearch/Llama-2-13b-hf,fp16,5.7767,0,0,512,4
+NousResearch/Llama-2-13b-hf,base_int3,0.0,0,0,512,4
+NousResearch/Llama-2-13b-hf,carekv_uniform_vec,0.0,0,0,512,4
+upstage/SOLAR-10.7B-v1.0,fp16,5.6968,0,0,512,4
+upstage/SOLAR-10.7B-v1.0,base_int3,6.1639,0,0,512,4
+upstage/SOLAR-10.7B-v1.0,carekv_uniform_vec,5.9853,5669345,6913567,512,4
+mistralai/Mistral-7B-v0.3,fp16,6.7854,0,0,512,4
+mistralai/Mistral-7B-v0.3,base_int3,7.2972,0,0,512,4
+mistralai/Mistral-7B-v0.3,carekv_uniform_vec,7.124,3662275,4726333,512,4
