@@ -3,7 +3,7 @@ from __future__ import annotations
 import torch
 
 from transformers import LlamaForCausalLM
-from .common import KVMethodAdapter, DEVICE, fp16_kv_mb
+from .common import KVMethodAdapter, DEVICE, fp16_kv_mb, resolve_device_map
 
 
 class FP16Adapter(KVMethodAdapter):
@@ -19,7 +19,7 @@ class FP16Adapter(KVMethodAdapter):
         torch.manual_seed(0)
         m = LlamaForCausalLM.from_pretrained(
             model_id, torch_dtype=torch.float16,
-            device_map=DEVICE if DEVICE == "cuda" else None,
+            device_map=resolve_device_map(), low_cpu_mem_usage=True,
         )
         m.config.use_cache = False
         m.eval()

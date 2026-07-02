@@ -9,7 +9,7 @@ from CARE_KV.care_kv import (
     get_debug_stats, reset_debug_stats,
 )
 from CARE_KV.care_kv.cache import apply_carekv_env_overrides
-from .common import KVMethodAdapter, DEVICE, fp16_kv_mb
+from .common import KVMethodAdapter, DEVICE, fp16_kv_mb, resolve_device_map
 
 
 class CAREKVAdapter(KVMethodAdapter):
@@ -144,9 +144,11 @@ class CAREKVAdapter(KVMethodAdapter):
         for k, v in env.items():
             os.environ[k] = v
         torch.manual_seed(0)
+        # device_map via CAREKV_DEVICE_MAP=auto shards >20B models across the
+        # GPUs exposed by CUDA_VISIBLE_DEVICES (see resolve_device_map).
         m = LlamaForCausalLM.from_pretrained(
             model_id, torch_dtype=torch.float16,
-            device_map=DEVICE if DEVICE == "cuda" else None,
+            device_map=resolve_device_map(), low_cpu_mem_usage=True,
         )
         m.config.use_cache = False
         cfg = m.config

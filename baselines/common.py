@@ -11,9 +11,26 @@ import os
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional
 
+import os
 import torch
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def resolve_device_map():
+    """HF `device_map` for from_pretrained.
+
+    Default: whole model on one device (DEVICE) — the historical behaviour.
+    Set env CAREKV_DEVICE_MAP=auto (or a balanced/JSON map) to shard a large
+    model (>~20B) across the GPUs exposed via CUDA_VISIBLE_DEVICES — required for
+    34B/70B on 48 GB cards. With a sharded map, do NOT .to() the model afterward;
+    inputs still go to DEVICE (cuda:0) and accelerate routes the cross-device
+    forward via hooks.
+    """
+    dmap = os.environ.get("CAREKV_DEVICE_MAP", "").strip()
+    if dmap:
+        return dmap
+    return DEVICE if DEVICE == "cuda" else None
 
 SYNTHETIC_PROMPT = (
     "The CARE-KV project investigates low-bit KV cache quantization for "

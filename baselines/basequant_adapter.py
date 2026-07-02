@@ -6,7 +6,7 @@ import torch
 from transformers import LlamaForCausalLM
 from CARE_KV.care_kv import CacheConfig, patch_llama_model, reset_all_caches
 from CARE_KV.care_kv.cache import apply_carekv_env_overrides
-from .common import KVMethodAdapter, DEVICE, fp16_kv_mb
+from .common import KVMethodAdapter, DEVICE, fp16_kv_mb, resolve_device_map
 
 
 class BaseQuantAdapter(KVMethodAdapter):
@@ -46,7 +46,7 @@ class BaseQuantAdapter(KVMethodAdapter):
         torch.manual_seed(0)
         m = LlamaForCausalLM.from_pretrained(
             model_id, torch_dtype=torch.float16,
-            device_map=DEVICE if DEVICE == "cuda" else None,
+            device_map=resolve_device_map(), low_cpu_mem_usage=True,
         )
         m.config.use_cache = False
         cfg = m.config
