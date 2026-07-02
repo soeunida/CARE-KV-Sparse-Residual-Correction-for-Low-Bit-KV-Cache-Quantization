@@ -58,11 +58,16 @@ class CAREKVLlamaAttention(nn.Module):
         self.original_attn = original_attn  # kept for weight access
 
         # Extract weights from original attention
-        # LlamaAttention uses q_proj, k_proj, v_proj, o_proj
-        W_Q = original_attn.q_proj.weight.data.clone()   # (H*D, model_dim)
-        W_K = original_attn.k_proj.weight.data.clone()
-        W_V = original_attn.v_proj.weight.data.clone()
-        W_O = original_attn.o_proj.weight.data.clone()   # (model_dim, H*D)
+        # LlamaAttention uses q_proj, k_proj, v_proj, o_proj.
+        # NOTE: reference the original weight tensors (no .clone()). CARE-KV uses
+        # them read-only (matmul only, see CAREKVLayer), and `original_attn` is
+        # kept alive on this module, so the storage persists. Cloning here
+        # duplicated every attention projection (~8.4 GB for a 13B MHA model),
+        # which pushed 13B models past single-GPU capacity → OOM at cache alloc.
+        W_Q = original_attn.q_proj.weight.data   # (H*D, model_dim)
+        W_K = original_attn.k_proj.weight.data
+        W_V = original_attn.v_proj.weight.data
+        W_O = original_attn.o_proj.weight.data   # (model_dim, H*D)
 
         self.care_layer = CAREKVLayer(
             cfg=cfg,
@@ -181,7 +186,16 @@ class CAREKVLlamaAttention(nn.Module):
             full_prefill = (T > 1) or (use_cache and hf_cache_len == 0 and T >= 1
                                        and not self._prefilled.get(seq_id, False))
             if full_prefill:
-                self.reset_cache(seq_id)
+                # The cache is shared across all layers (one (L,Hkv,P,T,D) arena,
+                # each layer writes its own layer_id slice). Only the first layer
+                # (re)creates it for a new prefill; other layers must reset only
+                # their own per-layer prefill flag, or they would wipe the shared
+                # cache mid-pass. Creating a cache per layer previously blew up
+                # memory ~num_layers× (OOM on 13B, esp. MHA where Hkv is large).
+                if self.layer_id == 0:
+                    self.reset_cache(seq_id)
+                else:
+                    self._prefilled.pop(seq_id, None)
 
             cache = self._get_or_create_cache(seq_id, hidden_states.device)
 
@@ -301,6 +315,10 @@ def patch_llama_model(
 
     # Find all attention layers
     # LlamaForCausalLM: model.model.layers[i].self_attn
+    # One cache arena is shared across all layers (it carries the full L
+    # dimension and is indexed per layer_id). Sharing avoids allocating a
+    # full num_layers-sized cache inside every layer (num_layers× blowup).
+    shared_caches: Dict[int, CAREKVCache] = {}
     replaced = 0
     for name, module in model.named_modules():
         # Handle both LlamaAttention class name variants
@@ -326,6 +344,7 @@ def patch_llama_model(
                 layer_id=layer_id,
                 device=device,
             )
+            care_attn._caches = shared_caches   # share one cache arena across layers
             setattr(parent, attr, care_attn)
             replaced += 1
 
