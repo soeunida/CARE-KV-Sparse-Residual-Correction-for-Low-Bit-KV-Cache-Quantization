@@ -587,6 +587,7 @@ def vectorized_joint_correction(
 
     # ── K scoring ──
     score_K = None
+    pf_keep_k = None   # router pre-filter shortlist mask (applied post-normalize)
     # Phase-3 query-aware K-score (gated). CAREKV_KSCORE_LIVE=1 replaces the proxy
     # score_K with the exact query-aware K-score (ΔS·sensitivity · ‖V‖). OFF by
     # default → the block below is byte-identical to the current path.
@@ -601,6 +602,21 @@ def vectorized_joint_correction(
         from .residual_store import get_sketch_proj
         P = get_sketch_proj(cfg.head_dim, cfg.k_channel_group, cfg.sketch_dim, device)
         score_K = torch.zeros(Qn, n_k, device=device, dtype=torch.float32)
+        # Router O(S) scoring-BW pre-filter (router_prefilter_bw_design.md,
+        # router_sign_prefilter_design.md). C>0: score-mask so only the top-C K
+        # slots per query (by a cheap proxy) can be selected → the exact sketch
+        # score is needed for C, not all n_k, slots. C=0 → exact.
+        #   SIGN_PREFILTER_B>0 → directional sign-sketch (SimHash) proxy: rank by
+        #     ‖q_sketch‖·‖k_sketch‖·|cos θ̂| with θ̂ from the b-bit sign planes —
+        #     recovers the direction the magnitude bound dropped (b/8+2 B/cand).
+        #   SIGN_PREFILTER_B=0 → v1 magnitude bound ‖q‖·‖R_K‖ (direction deleted).
+        prefilter_c = int(os.environ.get("CAREKV_ROUTER_PREFILTER_C", "0") or "0")
+        sign_b = int(os.environ.get("CAREKV_ROUTER_SIGN_PREFILTER_B", "0") or "0")
+        _use_pf = 0 < prefilter_c < n_k and not _kscore_live
+        if _use_pf:
+            qnorm_v = Q_q.float().norm(dim=1)                          # (Q,)
+            ub_K = torch.zeros(Qn, n_k, device=device, dtype=torch.float32)
+            _sb = cfg.sketch_dim if sign_b <= 0 else min(sign_b, cfg.sketch_dim)
         for si in range(n_k):
             c0 = k_cgs[si] * cfg.k_channel_group
             c1 = c0 + cfg.k_channel_group
@@ -623,6 +639,37 @@ def vectorized_joint_correction(
             qdotr = (q_sketch * k_sketches[si].unsqueeze(0)).sum(dim=1).abs()  # (Q,)
             score_K[:, si] = (page_attn_mass * qdotr * boundary
                               * page_vdiff * sens)
+            if _use_pf:
+                if sign_b > 0:
+                    # directional sign-sketch proxy: |q·R_K| ≈ ‖a‖‖b‖·|cos θ̂|,
+                    # θ̂ from the b-bit sign planes of q_sketch (a) & k_sketch (b).
+                    qs_sign = q_sketch[:, :_sb] > 0                    # (Q, b)
+                    ks_sign = (k_sketches[si][:_sb] > 0).unsqueeze(0)  # (1, b)
+                    ham = (qs_sign != ks_sign).sum(dim=1).float()      # (Q,)
+                    cos_est = torch.cos(math.pi * ham / _sb).abs()     # (Q,)
+                    dhat = (q_sketch.norm(dim=1)
+                            * k_sketches[si].norm() * cos_est)         # (Q,)
+                    ub_K[:, si] = (page_attn_mass * dhat * boundary
+                                   * page_vdiff * sens)
+                else:
+                    rk_norm = R_Ks[si].float().norm()
+                    ub_K[:, si] = (page_attn_mass * qnorm_v * rk_norm
+                                   * boundary * page_vdiff * sens)
+        if _use_pf:
+            keep = torch.topk(ub_K, prefilter_c, dim=1).indices        # (Q, C)
+            # Restrict *selection* to the shortlist, but keep score_K intact so
+            # the per-kind normalization mean below is not polluted by -inf. The
+            # mask is applied to score_K_r (post-normalize) right before top-k.
+            pf_keep_k = torch.zeros_like(score_K, dtype=torch.bool)
+            pf_keep_k.scatter_(1, keep, True)
+            if debug_stats is not None:
+                debug_stats["k_prefilter_pool"] = (
+                    debug_stats.get("k_prefilter_pool", 0) + Qn * n_k)
+                debug_stats["k_prefilter_scored"] = (
+                    debug_stats.get("k_prefilter_scored", 0) + Qn * prefilter_c)
+                # analytical Stage-1 O(S) bytes/candidate: sign bits + fp16 norm
+                debug_stats["k_stage1_bytes_per_cand"] = (
+                    (_sb / 8.0 + 2.0) if sign_b > 0 else 2.0)
     # ── V scoring ──
     score_V = None
     if want_v and budget_v > 0:
@@ -711,6 +758,12 @@ def vectorized_joint_correction(
             score_V_r = score_V_r * lv
     else:
         score_K_r, score_V_r = score_K, score_V
+
+    # Apply the router pre-filter shortlist AFTER normalization: only the top-C
+    # K slots (by the cheap proxy) remain eligible for selection. Done here (not
+    # on score_K) so the normalization mean above is computed on true scores.
+    if pf_keep_k is not None and score_K_r is not None:
+        score_K_r = score_K_r.masked_fill(~pf_keep_k, float("-inf"))
 
     # ── selection masks per query ──
     sel_k = torch.zeros(Qn, n_k, dtype=torch.bool, device=device) if score_K is not None else None
