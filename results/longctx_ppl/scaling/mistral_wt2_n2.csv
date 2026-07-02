@@ -1,0 +1,9 @@
+model_id,dataset,seq_len,num_samples,mode,baseline_score,ppl,total_tokens,k_reads,v_reads,seconds,peak_gpu_mem_MB,imp_gini,imp_norm_entropy,imp_top1pct_mass,status,notes
+mistralai/Mistral-7B-v0.3,wikitext,512,2,fp16,-,5.8704,1022,0,0,37.5,14710.0,,,,real,
+mistralai/Mistral-7B-v0.3,wikitext,512,2,base_quant_int3,-,6.2496,1022,0,0,120.8,24420.9,,,,real,
+mistralai/Mistral-7B-v0.3,wikitext,512,2,turboquant_int3,-,6.2696,1022,0,0,46.0,14793.0,,,,real,
+mistralai/Mistral-7B-v0.3,wikitext,512,2,carekv_qaware,current,6.0498,1022,1838797,2355507,340.8,20587.0,0.76856,0.53048,0.64584,real,
+mistralai/Mistral-7B-v0.3,wikitext,1024,2,fp16,-,5.2007,2046,0,0,38.5,14915.7,0.76856,0.53048,0.64584,real,
+mistralai/Mistral-7B-v0.3,wikitext,1024,2,base_quant_int3,-,5.7048,2046,0,0,213.0,24707.0,0.76856,0.53048,0.64584,real,
+mistralai/Mistral-7B-v0.3,wikitext,1024,2,turboquant_int3,-,5.5155,2046,0,0,22.4,15350.6,0.76856,0.53048,0.64584,real,
+mistralai/Mistral-7B-v0.3,wikitext,1024,2,carekv_qaware,current,5.4645,2046,3651473,4737135,1016.8,23029.0,0.74872,0.52897,0.61584,real,

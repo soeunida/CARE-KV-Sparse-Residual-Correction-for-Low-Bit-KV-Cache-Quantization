@@ -46,6 +46,13 @@ _The per-(head,t) Python-loop correction dominates the prototype wall-clock — 
 
 _fp16/base/turbo run at all SL (N=2, same windows). CARE-KV correction is O(T·S·D) per prefill position in the current Python-orchestrated prototype (~30 min/window at SL2048, ~2 h/window at SL4096), so CARE-KV PPL is reported up to SL2048; SL4096/8192 CARE-KV is prototype-runtime-bound (see §1 — the *algorithmic* overhead there is single-digit %; the wall-clock is the un-fused-kernel artifact). CARE-KV beats base_quant AND TurboQuant at every measured SL._
 
+### wikitext
+
+| SL | fp16 | base_quant_int3 | turboquant_int3 | carekv_qaware | N | K/V reads (carekv) |
+|---|---|---|---|---|---|---|
+| 512 | 5.8704 | 6.2496 | 6.2696 | 6.0498 | 2 | 1838797/2355507 |
+| 1024 | 5.2007 | 5.7048 | 5.5155 | 5.4645 | 2 | 3651473/4737135 |
+
 ## 3. Query-aware routing advantage vs sequence length
 
 | dataset | SL | qaware PPL | magnitude PPL (q-agnostic) | base PPL | Δ(mag−qaware) | Δ(base−qaware) | eff#keys exp(H) | top1% mass |
@@ -53,6 +60,8 @@ _fp16/base/turbo run at all SL (N=2, same windows). CARE-KV correction is O(T·S
 | pg19 | 512 | 6.054 | 6.0618 | 6.2121 | 0.0078 | 0.1581 | 30.1 | 0.61698 |
 | pg19 | 1024 | 6.2478 | 6.4312 | 6.3988 | 0.1834 | 0.151 | 38.9 | 0.60134 |
 | pg19 | 2048 | 6.3788 | 6.6548 | 6.5854 | 0.276 | 0.2066 | 67.4 | 0.58685 |
+| wikitext | 512 | 6.0498 | - | 6.2496 | - | 0.1998 | 27.4 | 0.64584 |
+| wikitext | 1024 | 5.4645 | - | 5.7048 | - | 0.2403 | 39.1 | 0.61584 |
 
 _See results/longctx_ppl/fig_query_aware_vs_SL.png. Positive and growing Δ(mag−qaware) and Δ(base−qaware) = the query-aware utility's advantage widens with SL. Mechanism: the effective # of attended keys GROWS and the top-1% mass share FALLS with SL — attention importance disperses over more tokens — so, under a fixed correction budget, picking the right slots (only query-aware routing does) matters more._
 
