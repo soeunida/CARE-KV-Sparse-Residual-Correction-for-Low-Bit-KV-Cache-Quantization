@@ -182,6 +182,34 @@ def eval_arc(model, tok, n, seed):
                 n=total, seconds=round(time.perf_counter() - t0, 1))
 
 
+# ── LAMBADA (last-word prediction, 1 forward/example — cheapest for CARE-KV) ──
+def eval_lambada(model, tok, n, seed):
+    from datasets import load_dataset
+    ds = load_dataset("EleutherAI/lambada_openai", "en", split="test")
+    idxs = list(range(len(ds)))
+    random.Random(seed).shuffle(idxs)
+    idxs = idxs[:n] if n and n > 0 else idxs
+    correct = total = 0
+    t0 = time.perf_counter()
+    for j, i in enumerate(idxs):
+        text = ds[i]["text"].strip()
+        ids = tok(text, return_tensors="pt", add_special_tokens=True)["input_ids"][0]
+        if ids.numel() < 2:
+            continue
+        _reset_carekv_cache(model)
+        out = model(input_ids=ids.unsqueeze(0).to(DEVICE), use_cache=False)
+        # greedy accuracy: does argmax at position -2 predict the true last token?
+        pred = int(out.logits[0, -2].argmax().item())
+        gold = int(ids[-1].item())
+        correct += int(pred == gold)
+        total += 1
+        if (j + 1) % 50 == 0:
+            print(f"    [lambada] {j+1}/{len(idxs)} acc={correct/total:.4f} "
+                  f"({time.perf_counter()-t0:.0f}s)", flush=True)
+    return dict(acc=correct / max(total, 1), n=total,
+                seconds=round(time.perf_counter() - t0, 1))
+
+
 COLS = ["model_id", "mode", "task", "metric", "value", "n", "seconds",
         "k_reads", "v_reads", "status", "notes"]
 
@@ -194,6 +222,7 @@ def main():
     ap.add_argument("--tasks", nargs="+", default=["mmlu", "arc"])
     ap.add_argument("--mmlu-n", type=int, default=500)
     ap.add_argument("--arc-n", type=int, default=500)
+    ap.add_argument("--lambada-n", type=int, default=200)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out-csv", required=True)
     A = ap.parse_args()
@@ -246,6 +275,9 @@ def main():
                 elif task == "arc":
                     r = eval_arc(model, tok, A.arc_n, A.seed)
                     metrics = [("acc", r["acc"]), ("acc_norm", r["acc_norm"])]
+                elif task == "lambada":
+                    r = eval_lambada(model, tok, A.lambada_n, A.seed)
+                    metrics = [("acc", r["acc"])]
                 else:
                     continue
                 stats = adapter.collect_debug_stats() if hasattr(adapter, "collect_debug_stats") else {}

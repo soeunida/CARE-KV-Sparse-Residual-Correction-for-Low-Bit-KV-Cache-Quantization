@@ -27,7 +27,7 @@ from .quantizer import (
 from .residual_store import ResidualStoreManager, pack_4bit, unpack_4bit
 from .residual_router import ResidualRouter
 from .attention import CAREKVAttention, CAREKVMultiHeadAttention, apply_slot_corrections
-from .layer import CAREKVLayer, get_debug_stats, reset_debug_stats
+from .layer import CAREKVLayer, get_debug_stats, reset_debug_stats, get_imp_per_layer
 from .llama_patch import CAREKVLlamaAttention, patch_llama_model, reset_all_caches
 from .utils import (
     estimate_memory_bytes,

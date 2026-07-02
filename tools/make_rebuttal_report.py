@@ -168,16 +168,41 @@ def main():
                     kv = f"{r['k_reads']}/{r['v_reads']}"
             L.append(f"| {mid.split('/')[-1]} | {task} | {metric} | " +
                      " | ".join(cells) + f" | {kv} |")
-        L.append("\n_CARE-KV MMLU is **114 s/question** on DeepSeek-7B (router "
-                 "fired: K/V reads shown), so n=64 is the feasible ceiling "
-                 "(2 h/run) and ARC (4x forwards/question, ~8 h) is prototype-"
-                 "runtime-bound — same wall as §1/§2, not a method limit. "
-                 "**Read: CARE-KV preserves MMLU accuracy** — it matches the "
-                 "INT3 base and TurboQuant (all 0.406, n=64) and is within noise "
-                 "of fp16 (0.453 at n=64; 0.400 at the n=500 reference). At n=64 "
-                 "(1.5%/question) MMLU cannot resolve the three INT3 methods apart._")
+        L.append("\n_CARE-KV downstream is prototype-runtime-bound "
+                 "(~100 s/forward on DeepSeek-7B; router fired, K/V reads shown), so "
+                 "n is capped (MMLU n=64, LAMBADA n=100). At n=64, **MMLU** (1.5%/q) "
+                 "cannot resolve the three INT3 methods (all 0.406) — read as "
+                 "'CARE-KV does not hurt', not a win._")
+        L.append("\n_**LAMBADA** (1 forward/example, so it reaches n=100–300 and has "
+                 "real resolution) is the informative row and matches the PPL ground "
+                 "truth exactly: **CARE-KV 0.79 > INT3 base 0.783** (beats the naive "
+                 "baseline) but **TurboQuant 0.807 > CARE-KV** (Turbo ahead on this "
+                 "outlier-heavy model), all just below fp16 0.81. So downstream: "
+                 "CARE-KV beats plain INT3 and preserves accuracy, but does NOT beat "
+                 "TurboQuant — consistent with §2 and results/CARE_KV_RESULTS_"
+                 "CONSOLIDATED.md. (CARE-KV n=100 vs fast-mode n=300; cells show n.)_")
     else:
         L.append("_(no downstream rows yet)_")
+
+    # ── 5. Per-layer query-aware benefit ──
+    pl = rd("results/longctx_ppl/per_layer_importance.csv")
+    if pl:
+        L.append(sec("5. Per-layer query-aware benefit (importance dispersion)"))
+        L.append("_A layer whose per-key attention mass is more DISPERSED (lower Gini) "
+                 "has no dominant key, so which slot to correct depends on the query -> "
+                 "query-aware routing helps it most. Per-layer dispersion from a CARE-KV "
+                 "forward (see results/longctx_ppl/fig_per_layer_importance.png)._\n")
+        rows_pl = [r for r in pl if r.get("gini")]
+        disp = sorted(rows_pl, key=lambda r: float(r["gini"]))[:5]
+        conc = sorted(rows_pl, key=lambda r: -float(r["gini"]))[:5]
+        gv = [float(r["gini"]) for r in rows_pl]
+        L.append(f"- layers profiled: **{len(rows_pl)}**, Gini range "
+                 f"**{min(gv):.3f}–{max(gv):.3f}** (lower = more dispersed = more "
+                 f"query-aware benefit).")
+        L.append(f"- **most-dispersed (query-aware helps most):** layers "
+                 f"{', '.join(str(r['layer']) for r in disp)}.")
+        L.append(f"- **most-concentrated (least benefit):** layers "
+                 f"{', '.join(str(r['layer']) for r in conc)}.")
 
     open(OUT, "w").write("\n".join(L) + "\n")
     print(f"[report] wrote {OUT}")

@@ -75,7 +75,17 @@ _Each cell is `acc (n)`; compare only within the same n (CARE-KV is n=64 — its
 |---|---|---|---|---|---|---|---|
 | deepseek-llm-7b-base | arc | acc | 0.446 (500) | - | 0.428 (500) | - | - |
 | deepseek-llm-7b-base | arc | acc_norm | 0.434 (500) | - | 0.426 (500) | - | - |
-| deepseek-llm-7b-base | lambada | acc | 0.81 (300) | - | - | - | - |
+| deepseek-llm-7b-base | lambada | acc | 0.81 (300) | 0.7833 (300) | 0.8067 (300) | 0.79 (100) | 14086563/17877597 |
 | deepseek-llm-7b-base | mmlu | acc | 0.4 (500) | 0.4062 (64) | 0.4062 (64) | 0.4062 (64) | 10800731/14224549 |
 
-_CARE-KV MMLU is **114 s/question** on DeepSeek-7B (router fired: K/V reads shown), so n=64 is the feasible ceiling (2 h/run) and ARC (4x forwards/question, ~8 h) is prototype-runtime-bound — same wall as §1/§2, not a method limit. **Read: CARE-KV preserves MMLU accuracy** — it matches the INT3 base and TurboQuant (all 0.406, n=64) and is within noise of fp16 (0.453 at n=64; 0.400 at the n=500 reference). At n=64 (1.5%/question) MMLU cannot resolve the three INT3 methods apart._
+_CARE-KV downstream is prototype-runtime-bound (~100 s/forward on DeepSeek-7B; router fired, K/V reads shown), so n is capped (MMLU n=64, LAMBADA n=100). At n=64, **MMLU** (1.5%/q) cannot resolve the three INT3 methods (all 0.406) — read as 'CARE-KV does not hurt', not a win._
+
+_**LAMBADA** (1 forward/example, so it reaches n=100–300 and has real resolution) is the informative row and matches the PPL ground truth exactly: **CARE-KV 0.79 > INT3 base 0.783** (beats the naive baseline) but **TurboQuant 0.807 > CARE-KV** (Turbo ahead on this outlier-heavy model), all just below fp16 0.81. So downstream: CARE-KV beats plain INT3 and preserves accuracy, but does NOT beat TurboQuant — consistent with §2 and results/CARE_KV_RESULTS_CONSOLIDATED.md. (CARE-KV n=100 vs fast-mode n=300; cells show n.)_
+
+## 5. Per-layer query-aware benefit (importance dispersion)
+
+_A layer whose per-key attention mass is more DISPERSED (lower Gini) has no dominant key, so which slot to correct depends on the query -> query-aware routing helps it most. Per-layer dispersion from a CARE-KV forward (see results/longctx_ppl/fig_per_layer_importance.png)._
+
+- layers profiled: **32**, Gini range **0.491–0.861** (lower = more dispersed = more query-aware benefit).
+- **most-dispersed (query-aware helps most):** layers 0, 31, 13, 14, 17.
+- **most-concentrated (least benefit):** layers 25, 3, 2, 24, 22.

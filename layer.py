@@ -100,6 +100,18 @@ _DEBUG_STATS: Dict[str, Any] = {
     "imp_top1pct_mass_sum": 0.0, "imp_count": 0,
 }
 
+# layer_id -> [gini_sum, norm_entropy_sum, top1pct_sum, count] (CAREKV_DUMP_IMPORTANCE=1)
+_IMP_PER_LAYER: Dict[int, Any] = {}
+
+def get_imp_per_layer() -> Dict[int, Any]:
+    """Per-layer averaged token-importance dispersion (empty unless
+    CAREKV_DUMP_IMPORTANCE=1 was set during a carekv run)."""
+    out = {}
+    for lid, (g, e, t, c) in _IMP_PER_LAYER.items():
+        if c:
+            out[lid] = dict(gini=g / c, norm_entropy=e / c, top1pct_mass=t / c, count=c)
+    return out
+
 def _debug_stats_enabled() -> bool:
     return os.environ.get("CAREKV_DEBUG_STATS", "0") == "1"
 
@@ -110,6 +122,7 @@ def get_debug_stats() -> Dict[str, Any]:
 def reset_debug_stats() -> None:
     for k in list(_DEBUG_STATS.keys()):
         _DEBUG_STATS[k] = 0 if isinstance(_DEBUG_STATS[k], int) else 0.0
+    _IMP_PER_LAYER.clear()
 
 
 def _resolve_prefill_mode() -> str:
@@ -482,6 +495,10 @@ class CAREKVLayer(nn.Module):
                 _DEBUG_STATS["imp_norm_entropy_sum"] += float(ent.item())
                 _DEBUG_STATS["imp_top1pct_mass_sum"] += float(top1.item())
                 _DEBUG_STATS["imp_count"] += 1
+                # per-layer accumulation (query-aware benefit-per-layer analysis)
+                pl = _IMP_PER_LAYER.setdefault(self.layer_id, [0.0, 0.0, 0.0, 0])
+                pl[0] += float(gini.item()); pl[1] += float(ent.item())
+                pl[2] += float(top1.item()); pl[3] += 1
 
         kind = os.environ.get("CAREKV_PREFILL_RESIDUAL_KIND", "both").lower()
         if kind not in {"v", "k", "both"}:
