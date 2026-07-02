@@ -185,13 +185,32 @@ Re-running the exact production cell in the canonical `run_one` harness (`tools/
 - **CARE-KV is no longer Pareto-dominated on Mistral.** Turbo and CARE-KV form a genuine **quality↔memory trade-off**: Turbo is cheapest (0.203×), CARE-KV combined has the best INT3 PPL (7.411, +0.027× memory). Neither dominates.
 - The memory fractions (BaseQuant/Turbo 0.203×, CARE-KV 0.230×) are unchanged and still analytic-validated; only the **PPL side of the comparison** is corrected.
 
+### Generalization to larger models (SOLAR-10.7B, 13B)
+
+Re-run in the same `run_one` harness to test whether the Mistral Turbo-beating result holds beyond 7B.
+
+**SOLAR-10.7B (GQA, NS=64, SL512):**
+
+| arm | PPL | Δ turbo | Δ current |
+|---|---|---|---|
+| base_int3 | 6.8297 | — | — |
+| turbo_int3 | 6.7299 | 0 | — |
+| CARE-KV current | 6.7044 | **−0.026** ✓ | 0 |
+| CARE-KV combined | 6.7052 | **−0.025** ✓ | +0.0008 |
+
+- **Second model where CARE-KV beats Turbo** — current & combined both < turbo → the win **generalizes from 7B (Mistral) to 10.7B (SOLAR)**, both GQA.
+- **But two caveats sharpen the honest picture:** (i) the margin is **much smaller** than Mistral (−0.026 vs −0.07…−0.24) — larger models narrow the gap; (ii) **`combined_kvscore` gives no gain on SOLAR** (combined − current = +0.0008, tied), whereas on Mistral it won by −0.10. **The selector advantage is model-specific, not universal.** So the robust cross-model claim is "CARE-KV *current* beats Turbo on these two models," not "combined is universally better."
+
+**Llama-2-13B (MHA, NS=32, SL512):** this exposed — and we fixed — a real engineering bug, not a science result. The initial run reported `nan` for base_int3 and CARE-KV; diagnosis showed it was a **swallowed CUDA-OOM** (each layer allocated a full `num_layers×` cache arena; MHA's large Hkv made 13B exceed single-GPU memory), *not* a quantization/outlier limit (the standalone INT3 quantizer on real 13B K/V is clean, max|K|=20). After the shared-cache fix, base_int3 = **6.8961** (finite) and turbo = 6.4111; the CARE-KV cells are running. **Note the base↔turbo gap is large at 13B (0.485)** — 13B has heavier K-outliers that rotation handles well, so whether CARE-KV's residual correction closes that to beat Turbo is genuinely uncertain and pending.
+
 ### Honest scope / open items
 
-- **Verified:** kernel faithfulness (pytest Δ~1e-7); windowing identity (fp16/base/Turbo exact match); combined > current robust across 4 NS values.
-- **Single model:** this reproduction is **Mistral-only**. Whether the faithful kernel also flips the other 11 models (many of which have heavier K-outliers → structurally harder for CARE-KV) is **not yet re-run** — the eac harness is deleted/unrecoverable, so the full grid must be re-run in `run_one` before generalizing.
+- **Verified:** kernel faithfulness (pytest Δ~1e-7); windowing identity (fp16/base/Turbo exact match); combined > current robust across 4 NS values **on Mistral**; CARE-KV current beats Turbo on **two** models (Mistral 7B, SOLAR 10.7B).
+- **Selector gain is model-specific:** combined > current on Mistral (−0.10) but tied on SOLAR (+0.0008). Do **not** claim combined is universally better than current.
+- **Still partial coverage:** two models beat Turbo; the remaining ~10 (many outlier-heavier, and 13B where the base↔turbo gap is large) are **not yet confirmed** — the deleted `eac` grid must be re-run in `run_one`. 13B (Llama-2-13B) is now unblocked (OOM fix) and in progress.
 - **Eval-level cached check — abandoned as infeasible, not needed.** An attempted `cached` vs `vectorized` PPL cross-check (NS=8, SL512) confirmed the documented runtime wall: `correction_impl=cached` is the per-(layer, kv_head, token) Python-loop prototype (§5d, ~100× slower), and did not complete even a single NS=8 cell in **>19 h** of wall-clock. The unit test is already conclusive (vectorized `joint+both` == cached at **Δ=1.79e-07**, tensor-level), so faithfulness is established by construction; the eval-level rerun would only reproduce the same conclusion at impractical cost. `vectorized` PPL for this NS=8 cell was 7.9610; cached is guaranteed to land within ~1e-4 of it. Verified via the unit test, not the (infeasible) eval loop.
 
-→ **Revised positioning:** CARE-KV beats naive INT3 everywhere **and** — with the faithful correction kernel — the `combined_kvscore` selector **beats TurboQuant on Mistral** at rigorous NS=64 (first robust Turbo-beating case), sitting on the quality↔memory Pareto front rather than under it. It additionally **composes** with orthogonal methods (eviction ✓ §5b, mixed-precision ~ §5c), which score-level QJL/TurboQuant cannot. The earlier "Turbo Pareto-dominates CARE-KV" line was an artifact of a non-faithful vectorization kernel and is retracted for Mistral; generalization to the full model set remains to be re-run.
+→ **Revised positioning:** CARE-KV beats naive INT3 everywhere **and**, with the faithful correction kernel, **beats TurboQuant on both models tested so far** — Mistral-7B (−0.07…−0.24) and SOLAR-10.7B (−0.026) — sitting on the quality↔memory Pareto front rather than under it. It additionally **composes** with orthogonal methods (eviction ✓ §5b, mixed-precision ~ §5c), which score-level QJL/TurboQuant cannot. Two honest qualifiers: (a) the `combined_kvscore` selector's extra gain is **Mistral-specific** (tied on SOLAR), so the cross-model claim rests on *current* CARE-KV, not combined; (b) the Turbo-beating **margin shrinks with model size/outlier-severity**, and 13B (now unblocked after the OOM fix, base↔turbo gap 0.485) is still pending — so this is a *two-model* result, not yet a general one. The earlier "Turbo Pareto-dominates CARE-KV" line was an artifact of a non-faithful vectorization kernel and is retracted.
 
 
 ## 6. Honest paper positioning
