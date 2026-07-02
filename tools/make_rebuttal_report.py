@@ -99,14 +99,20 @@ def main():
                     n = r["num_samples"]; kv = f"{r['k_reads']}/{r['v_reads']}"
             L.append(f"| {sl} | " + " | ".join(cells) + f" | {n} | {kv} |")
         if dsname == "pg19":
-            L.append("\n_fp16/base/turbo run at all SL (N=2, same windows). CARE-KV "
+            L.append("\n_**These PPLs are N=2-window EXPLORATORY, not rigorous** "
+                     "(2 windows is too noisy to rank close methods). CARE-KV "
                      "correction is O(T·S·D) per prefill position in the current "
-                     "Python-orchestrated prototype (~30 min/window at SL2048, "
-                     "~2 h/window at SL4096), so CARE-KV PPL is reported up to SL2048; "
-                     "SL4096/8192 CARE-KV is prototype-runtime-bound (see §1 — the "
-                     "*algorithmic* overhead there is single-digit %; the wall-clock is "
-                     "the un-fused-kernel artifact). CARE-KV beats base_quant AND "
-                     "TurboQuant at every measured SL._")
+                     "prototype (~30 min/window at SL2048, ~2 h/window at SL4096), so "
+                     "CARE-KV PPL is reported up to SL2048; SL4096/8192 is "
+                     "prototype-runtime-bound (see §1)._")
+            L.append("\n_**vs baselines (ground truth — do not overstate):** CARE-KV "
+                     "reliably beats plain **INT3 base** (repo NS=64: 12W/0L). "
+                     "**vs TurboQuant it is model-dependent** — CARE-KV wins 3/4 "
+                     "models on PPL (TinyLlama/Mistral/SOLAR) but **loses on Yi-6B**, "
+                     "and on the rigorous NS=64 WikiText-2 grid TurboQuant is ahead "
+                     "(gap tracks K-outlier severity). The N=2 rows above must NOT be "
+                     "read as CARE-KV beating TurboQuant — that needs NS~16-64. "
+                     "See results/CARE_KV_RESULTS_CONSOLIDATED.md._")
 
     # ── 3. Query-aware routing vs SL ──
     L.append(sec("3. Query-aware routing advantage vs sequence length"))

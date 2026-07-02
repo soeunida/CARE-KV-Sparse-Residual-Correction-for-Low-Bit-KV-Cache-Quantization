@@ -44,7 +44,9 @@ _The per-(head,t) Python-loop correction dominates the prototype wall-clock — 
 | 4096 | 5.9281 | 6.7232 | 6.6324 | - | - | - |
 | 8192 | 5.8579 | 6.599 | - | - | - | - |
 
-_fp16/base/turbo run at all SL (N=2, same windows). CARE-KV correction is O(T·S·D) per prefill position in the current Python-orchestrated prototype (~30 min/window at SL2048, ~2 h/window at SL4096), so CARE-KV PPL is reported up to SL2048; SL4096/8192 CARE-KV is prototype-runtime-bound (see §1 — the *algorithmic* overhead there is single-digit %; the wall-clock is the un-fused-kernel artifact). CARE-KV beats base_quant AND TurboQuant at every measured SL._
+_**These PPLs are N=2-window EXPLORATORY, not rigorous** (2 windows is too noisy to rank close methods). CARE-KV correction is O(T·S·D) per prefill position in the current prototype (~30 min/window at SL2048, ~2 h/window at SL4096), so CARE-KV PPL is reported up to SL2048; SL4096/8192 is prototype-runtime-bound (see §1)._
+
+_**vs baselines (ground truth — do not overstate):** CARE-KV reliably beats plain **INT3 base** (repo NS=64: 12W/0L). **vs TurboQuant it is model-dependent** — CARE-KV wins 3/4 models on PPL (TinyLlama/Mistral/SOLAR) but **loses on Yi-6B**, and on the rigorous NS=64 WikiText-2 grid TurboQuant is ahead (gap tracks K-outlier severity). The N=2 rows above must NOT be read as CARE-KV beating TurboQuant — that needs NS~16-64. See results/CARE_KV_RESULTS_CONSOLIDATED.md._
 
 ### wikitext
 
@@ -71,8 +73,9 @@ _Each cell is `acc (n)`; compare only within the same n (CARE-KV is n=64 — its
 
 | model | task | metric | fp16 | base_quant_int3 | turboquant_int3 | carekv_stored_int3 | carekv K/V |
 |---|---|---|---|---|---|---|---|
-| deepseek-llm-7b-base | arc | acc | 0.446 (500) | - | - | - | - |
-| deepseek-llm-7b-base | arc | acc_norm | 0.434 (500) | - | - | - | - |
+| deepseek-llm-7b-base | arc | acc | 0.446 (500) | - | 0.428 (500) | - | - |
+| deepseek-llm-7b-base | arc | acc_norm | 0.434 (500) | - | 0.426 (500) | - | - |
+| deepseek-llm-7b-base | lambada | acc | 0.81 (300) | - | - | - | - |
 | deepseek-llm-7b-base | mmlu | acc | 0.4 (500) | 0.4062 (64) | 0.4062 (64) | 0.4062 (64) | 10800731/14224549 |
 
 _CARE-KV MMLU is **114 s/question** on DeepSeek-7B (router fired: K/V reads shown), so n=64 is the feasible ceiling (2 h/run) and ARC (4x forwards/question, ~8 h) is prototype-runtime-bound — same wall as §1/§2, not a method limit. **Read: CARE-KV preserves MMLU accuracy** — it matches the INT3 base and TurboQuant (all 0.406, n=64) and is within noise of fp16 (0.453 at n=64; 0.400 at the n=500 reference). At n=64 (1.5%/question) MMLU cannot resolve the three INT3 methods apart._
