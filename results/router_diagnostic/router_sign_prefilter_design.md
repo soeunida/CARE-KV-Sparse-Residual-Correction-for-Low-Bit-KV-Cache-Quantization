@@ -123,14 +123,20 @@ so it should hold PPL where the magnitude bound could not. Two regimes:
   one-sided upper bound `cosθ_UB = |cos(π·(h − z·σ_h)/D)|` for the rank key →
   pruning that is exact with prob ≥ Φ(z), at the cost of a larger C. Report both.
 
-## 6. Why this should fix the NO-GO
+## 6. Why this was *expected* to fix the NO-GO (original reasoning — see caveat)
 
-The failure was structural: aligned slots (`cos θ ≈ 1`) with small `‖R_K‖` were
-ranked below orthogonal slots (`cos θ ≈ 0`) with large `‖R_K‖`, because the key
-omitted `cos θ`. The sign proxy **puts `|cos θ̂|` back into the key**, so an aligned
-small-norm slot with `‖R_K‖·|cosθ|` large now ranks correctly. The remaining risk
-is only *angle-estimate noise* at small `b` (a variance knob), not the *systematic
-mis-direction* that killed v1.
+> **Post-hoc:** this whole section rests on a NO-GO that was actually a
+> normalization bug. The "structural failure" below never happened in a correct
+> run — with the bug fixed, the magnitude ranking already selects the right
+> slots. Kept for the record; the premise is false.
+
+The (apparent) failure looked structural: aligned slots (`cos θ ≈ 1`) with small
+`‖R_K‖` seemed to be ranked below orthogonal slots (`cos θ ≈ 0`) with large
+`‖R_K‖`, because the key omitted `cos θ`. The sign proxy **puts `|cos θ̂|` back
+into the key**, so an aligned small-norm slot with `‖R_K‖·|cosθ|` large would rank
+correctly. In reality the remaining effect is only *angle-estimate noise* at small
+`b` — and since there was no systematic mis-direction to correct, that noise makes
+the sign proxy *worse* than the plain bound, as the sweep confirmed.
 
 ## 7. Implementation plan (localized, behind flags)
 
