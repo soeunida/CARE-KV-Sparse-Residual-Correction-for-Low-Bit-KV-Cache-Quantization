@@ -1,0 +1,4 @@
+model_id,mode,task,metric,value,n,seconds,k_reads,v_reads,status,notes
+deepseek-ai/deepseek-llm-7b-base,turboquant_int3,mmlu,acc,0.374,500,35.1,0,0,real,
+deepseek-ai/deepseek-llm-7b-base,turboquant_int3,arc,acc,0.428,500,117.8,0,0,real,
+deepseek-ai/deepseek-llm-7b-base,turboquant_int3,arc,acc_norm,0.426,500,117.8,0,0,real,
