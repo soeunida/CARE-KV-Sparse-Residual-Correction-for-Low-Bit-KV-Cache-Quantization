@@ -1,0 +1,4 @@
+prefilter_C,ppl,dppl_vs_exact,k_prefilter_pool,k_prefilter_scored,scored_frac,k_reads,seconds
+0,11.6909,0.0,0,0,1.0,319439,62.4
+4,14.6197,2.9288,2883584,720896,0.25,720896,44.9
+16,11.6909,0.0,0,0,1.0,319439,41.2
