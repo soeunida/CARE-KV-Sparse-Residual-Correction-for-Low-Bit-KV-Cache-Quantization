@@ -1,0 +1,6 @@
+model_id,dataset,seq_len,num_samples,mode,baseline_score,ppl,total_tokens,k_reads,v_reads,seconds,peak_gpu_mem_MB,imp_gini,imp_norm_entropy,imp_top1pct_mass,status,notes
+01-ai/Yi-6B,pg19,512,16,fp16,-,9.0506,8176,0,0,46.4,12527.8,,,,real,
+01-ai/Yi-6B,pg19,512,16,base_quant_int3,-,10.8934,8176,0,0,400.7,12643.7,,,,real,
+01-ai/Yi-6B,pg19,512,16,turboquant_int3,-,10.125,8176,0,0,50.7,12528.0,,,,real,
+01-ai/Yi-6B,pg19,512,16,carekv_qaware,current,10.261,8176,14601566,18952866,2018.8,12582.6,0.71733,0.54377,0.56759,real,
+01-ai/Yi-6B,pg19,512,16,carekv_magnitude,oracle_residual_magnitude,10.8635,8176,18554880,14999552,1922.9,12582.6,0.72595,0.52996,0.58083,real,

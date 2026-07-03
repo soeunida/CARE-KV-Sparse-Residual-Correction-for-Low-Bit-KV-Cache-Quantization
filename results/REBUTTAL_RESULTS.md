@@ -89,3 +89,14 @@ _A layer whose per-key attention mass is more DISPERSED (lower Gini) has no domi
 - layers profiled: **32**, Gini range **0.491–0.861** (lower = more dispersed = more query-aware benefit).
 - **most-dispersed (query-aware helps most):** layers 0, 31, 13, 14, 17.
 - **most-concentrated (least benefit):** layers 25, 3, 2, 24, 22.
+
+## 6. Multi-model rigorous verification — Yi-6B (PG-19, N=16)
+
+_Re-run of the 2nd model at a RIGOROUS sample (N=16, vs the noisy N=2 in §2/§3) to check the vs-TurboQuant claim. Yi-6B is the outlier-heavy model the ground truth says CARE-KV LOSES to Turbo on._
+
+| SL | fp16 | base_quant_int3 | turboquant_int3 | carekv_qaware | carekv_magnitude | carekv−turbo | carekv−base |
+|---|---|---|---|---|---|---|---|
+| 512 | 9.0506 | 10.8934 | 10.125 | 10.261 | 10.8635 | +0.136 | -0.632 |
+| 1024 | 8.3095 | 10.09 | 9.4404 | 9.5822 | 10.0597 | +0.142 | -0.508 |
+
+_**Verdict (confirms ground truth):** at rigorous N=16 CARE-KV **loses to TurboQuant** on Yi-6B (carekv−turbo > 0) while it still **beats INT3 base** (carekv−base < 0). This REVERSES the misleading N=2 numbers in §2 (where CARE-KV appeared to beat Turbo), and is why §2/§3 label the N=2 rows exploratory. The query-aware>magnitude gap (carekv_qaware < carekv_magnitude) still holds — §3's mechanism generalizes to Yi._

@@ -204,6 +204,39 @@ def main():
         L.append(f"- **most-concentrated (least benefit):** layers "
                  f"{', '.join(str(r['layer']) for r in conc)}.")
 
+    # ── 6. Multi-model rigorous verification (Yi-6B, N=16) ──
+    yi = rdglob("results/longctx_ppl/yi_rigorous/*.csv")
+    yidx = {}
+    for r in yi:
+        if r.get("status") == "real":
+            yidx[(int(r["seq_len"]), r["mode"])] = r
+    if yidx:
+        L.append(sec("6. Multi-model rigorous verification — Yi-6B (PG-19, N=16)"))
+        L.append("_Re-run of the 2nd model at a RIGOROUS sample (N=16, vs the noisy "
+                 "N=2 in §2/§3) to check the vs-TurboQuant claim. Yi-6B is the "
+                 "outlier-heavy model the ground truth says CARE-KV LOSES to Turbo on._\n")
+        sls = sorted({sl for (sl, _) in yidx})
+        modes = ["fp16", "base_quant_int3", "turboquant_int3",
+                 "carekv_qaware", "carekv_magnitude"]
+        present = [m for m in modes if any((sl, m) in yidx for sl in sls)]
+        L.append("| SL | " + " | ".join(present) + " | carekv−turbo | carekv−base |")
+        L.append("|" + "---|" * (len(present) + 3))
+        for sl in sls:
+            cells = [f"{yidx[(sl,m)]['ppl']}" if (sl, m) in yidx else "-" for m in present]
+            qp = fnum(yidx[(sl, "carekv_qaware")]["ppl"]) if (sl, "carekv_qaware") in yidx else None
+            tp = fnum(yidx[(sl, "turboquant_int3")]["ppl"]) if (sl, "turboquant_int3") in yidx else None
+            bp = fnum(yidx[(sl, "base_quant_int3")]["ppl"]) if (sl, "base_quant_int3") in yidx else None
+            dvt = f"{qp-tp:+.3f}" if (qp and tp) else "-"
+            dvb = f"{qp-bp:+.3f}" if (qp and bp) else "-"
+            L.append(f"| {sl} | " + " | ".join(cells) + f" | {dvt} | {dvb} |")
+        L.append("\n_**Verdict (confirms ground truth):** at rigorous N=16 CARE-KV "
+                 "**loses to TurboQuant** on Yi-6B (carekv−turbo > 0) while it still "
+                 "**beats INT3 base** (carekv−base < 0). This REVERSES the misleading "
+                 "N=2 numbers in §2 (where CARE-KV appeared to beat Turbo), and is why "
+                 "§2/§3 label the N=2 rows exploratory. The query-aware>magnitude gap "
+                 "(carekv_qaware < carekv_magnitude) still holds — §3's mechanism "
+                 "generalizes to Yi._")
+
     open(OUT, "w").write("\n".join(L) + "\n")
     print(f"[report] wrote {OUT}")
 
