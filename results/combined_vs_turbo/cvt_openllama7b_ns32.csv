@@ -1,0 +1,6 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,k_reads,v_reads,runtime_s,status
+openlm-research/open_llama_7b_v2,512,32,fp16,8.0538,,,,0,0,38.4,real
+openlm-research/open_llama_7b_v2,512,32,base_int3,8.7886,,,,0,0,6219.5,real
+openlm-research/open_llama_7b_v2,512,32,turbo_int3,8.5333,,,,0,0,14.2,real
+openlm-research/open_llama_7b_v2,512,32,carekv_current,8.556,,,,29428443,37680421,13521.4,real
+openlm-research/open_llama_7b_v2,512,32,carekv_combined,8.2907,,,,30771694,36337170,10211.1,real
