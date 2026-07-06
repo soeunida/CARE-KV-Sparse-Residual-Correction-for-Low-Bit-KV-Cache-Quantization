@@ -50,7 +50,7 @@ def val(rows, arm):
 
 
 def kv(rows):
-    r = rows.get("carekv_uniform_vec")
+    r = next((rows[a] for a in rows if a.startswith("carekv")), None)
     if not r:
         return 0, 0
     try:
@@ -81,9 +81,11 @@ def main():
         name = os.path.basename(c)[:-4]
         rows = load_model(c)
         mid = next(iter(rows.values()), {}).get("model_id", name)
+        base_arm = next((a for a in rows if a.startswith("base_int")), "base_int3")
+        carekv_arm = next((a for a in rows if a.startswith("carekv")), "carekv_uniform_vec")
         f_fp, s_fp = val(rows, "fp16")
-        f_bq, s_bq = val(rows, "base_int3")
-        f_ck, s_ck = val(rows, "carekv_uniform_vec")
+        f_bq, s_bq = val(rows, base_arm)
+        f_ck, s_ck = val(rows, carekv_arm)
         k, v = kv(rows)
         arch = arch_of(mid)
 

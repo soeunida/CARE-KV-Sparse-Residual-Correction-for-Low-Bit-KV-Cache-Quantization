@@ -1,0 +1,5 @@
+[
+  {"model_id": "NousResearch/Llama-2-13b-hf", "gpus": [3], "seq_len": 512, "num_samples": 4},
+  {"model_id": "upstage/SOLAR-10.7B-v1.0",    "gpus": [4], "seq_len": 512, "num_samples": 4},
+  {"model_id": "mistralai/Mistral-7B-v0.3",   "gpus": [5], "seq_len": 512, "num_samples": 4}
+]

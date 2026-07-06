@@ -139,6 +139,15 @@ class ResidualRouter:
         k_candidates: List[Tuple[float, int, int, int]] = []   # (score, pid, cg, slot)
         v_candidates: List[Tuple[float, int, int, int]] = []   # (score, pid, vb, slot)
 
+        # Router O(S) scoring-BW pre-filter (router_prefilter_bw_design.md).
+        # CAREKV_ROUTER_PREFILTER_C=C>0 (carekv baseline only): shortlist the
+        # top-C K candidates by a cheap Cauchy–Schwarz upper bound
+        # (|q·R_K| ≤ ‖q‖·k_error_norm, a stored 2 B scalar vs the 64 B sketch),
+        # then read+score the sketch ONLY for those C. C=0 → exact / original.
+        prefilter_c = int(os.environ.get("CAREKV_ROUTER_PREFILTER_C", "0") or "0")
+        qnorm = float(q.norm().item())
+        k_prefilter_pool = []   # (ub, pid, cg, slot, pam, pbr, pvd, k_sketch_cg)
+
         token_offset = 0
         for page_id in page_ids:
             meta: Optional[PageMeta] = cache.meta_table[self.layer_id][kv_head][page_id]
@@ -167,6 +176,17 @@ class ResidualRouter:
             if kind in {"k", "both"} and meta.k_sketch is not None:
                 for cg, slot in enumerate(meta.k_residual_slots):
                     if slot < 0:
+                        continue
+                    if prefilter_c > 0 and baseline == "carekv":
+                        # Stage 1: cheap upper bound, no sketch read. Defer the
+                        # exact sketch score to the post-loop shortlist.
+                        k_err = (float(meta.k_error_norm[cg].item())
+                                 if meta.k_error_norm is not None else 1.0)
+                        ub = (page_attn_mass * qnorm * k_err
+                              * page_boundary_risk * page_v_diff * self.sensitivity)
+                        k_prefilter_pool.append(
+                            (ub, page_id, cg, slot, page_attn_mass,
+                             page_boundary_risk, page_v_diff, meta.k_sketch[cg]))
                         continue
                     rk_sketch = meta.k_sketch[cg].float().to(q.device)
                     qdotr_est = (q_sketch_by_cg[cg] * rk_sketch).sum().abs().item()
@@ -233,6 +253,23 @@ class ResidualRouter:
                 v_candidates.append((score, page_id, vb, slot))
 
             token_offset = t1
+
+        # Pre-filter Stage 2: exact-score the sketch for the top-C candidates by
+        # upper bound only (the O(S) sketch read is thus replaced by an O(S) 2 B
+        # norm read + an O(1) sketch read of size C).
+        if prefilter_c > 0 and k_prefilter_pool:
+            k_prefilter_pool.sort(key=lambda x: x[0], reverse=True)
+            shortlist = k_prefilter_pool[:prefilter_c]
+            for (ub, pid, cg, slot, pam, pbr, pvd, ksk) in shortlist:
+                rk_sketch = ksk.float().to(q.device)
+                qdotr_est = (q_sketch_by_cg[cg] * rk_sketch).sum().abs().item()
+                score = pam * qdotr_est * pbr * pvd * self.sensitivity
+                k_candidates.append((score, pid, cg, slot))
+            if debug_stats is not None:
+                debug_stats["k_prefilter_pool"] = (
+                    debug_stats.get("k_prefilter_pool", 0) + len(k_prefilter_pool))
+                debug_stats["k_prefilter_scored"] = (
+                    debug_stats.get("k_prefilter_scored", 0) + len(shortlist))
 
         # ── Apply read budget over all stored slots ───────────────────
         total_k = len(k_candidates)

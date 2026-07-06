@@ -1,0 +1,4 @@
+model_id,dataset,seq_len,num_samples,mode,baseline_score,ppl,total_tokens,k_reads,v_reads,seconds,peak_gpu_mem_MB,imp_gini,imp_norm_entropy,imp_top1pct_mass,status,notes
+01-ai/Yi-6B,pg19,2048,2,fp16,-,7.4002,4094,0,0,60.9,13720.0,,,,real,
+01-ai/Yi-6B,pg19,2048,2,base_quant_int3,-,9.1489,4094,0,0,249.0,19818.8,,,,real,
+01-ai/Yi-6B,pg19,2048,2,turboquant_int3,-,8.6021,4094,0,0,37.5,15118.5,,,,real,

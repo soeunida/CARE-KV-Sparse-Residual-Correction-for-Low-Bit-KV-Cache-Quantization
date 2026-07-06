@@ -30,10 +30,12 @@ def main():
                     help=">0 overrides sketch_dim via CAREKV_SKETCH_DIM (attribution ablation)")
     ap.add_argument("--carekv-only", action="store_true",
                     help="skip fp16/base arms")
-    ap.add_argument("--arm", choices=["fp16", "base_int3", "carekv"], default=None,
+    ap.add_argument("--arm", choices=["fp16", "base", "carekv"], default=None,
                     help="run ONLY this arm (separate-process isolation for big "
                          "models); appends to --out-csv so 3 sequential runs "
                          "build the full table with fresh memory each")
+    ap.add_argument("--bits", type=int, default=3, choices=[2, 3, 4],
+                    help="base KV bit-width (2 = larger headroom for CARE-KV)")
     args = ap.parse_args()
     maxp = args.seq_len // 16 + 8
     if args.sketch_dim > 0:
@@ -42,16 +44,16 @@ def main():
     care_label = f"carekv_uniform_vec_sk{args.sketch_dim}" if args.sketch_dim > 0 else "carekv_uniform_vec"
     arms = [
         ("fp16", FP16Adapter()),
-        ("base_int3", BaseQuantAdapter(bits=3)),
+        (f"base_int{args.bits}", BaseQuantAdapter(bits=args.bits)),
         (care_label, CAREKVAdapter(
-            mode="fixed", bits=3, base_quantizer="uniform",
+            mode="fixed", bits=args.bits, base_quantizer="uniform",
             sk=2, sv=4, rk=2, rv=2, max_pages=maxp,
             correction_impl="vectorized")),
     ]
     if args.carekv_only:
         arms = [a for a in arms if a[0].startswith("carekv")]
     if args.arm:
-        want = "carekv" if args.arm == "carekv" else args.arm
+        want = {"fp16": "fp16", "base": "base_int", "carekv": "carekv"}[args.arm]
         arms = [a for a in arms if a[0].startswith(want)]
     rows = []
     for label, ad in arms:

@@ -98,5 +98,6 @@ _Re-run of the 2nd model at a RIGOROUS sample (N=16, vs the noisy N=2 in §2/§3
 |---|---|---|---|---|---|---|---|
 | 512 | 9.0506 | 10.8934 | 10.125 | 10.261 | 10.8635 | +0.136 | -0.632 |
 | 1024 | 8.3095 | 10.09 | 9.4404 | 9.5822 | 10.0597 | +0.142 | -0.508 |
+| 2048 | 7.6034 | 9.1691 | 8.7639 | - | - | - | - |
 
 _**Verdict (confirms ground truth):** at rigorous N=16 CARE-KV **loses to TurboQuant** on Yi-6B (carekv−turbo > 0) while it still **beats INT3 base** (carekv−base < 0). This REVERSES the misleading N=2 numbers in §2 (where CARE-KV appeared to beat Turbo), and is why §2/§3 label the N=2 rows exploratory. The query-aware>magnitude gap (carekv_qaware < carekv_magnitude) still holds — §3's mechanism generalizes to Yi._
