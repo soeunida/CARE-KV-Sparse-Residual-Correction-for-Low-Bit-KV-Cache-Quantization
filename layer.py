@@ -56,7 +56,8 @@ from .kivi_helpers import (
 # Base-quantizer names that use the fp16 side-buffer dispatch (i.e.,
 # any non-"uniform" name). Update this set when adding new schemes.
 _SIDE_BUFFER_BASE_QUANTIZERS = {"kivi_style", "rotatekv_style",
-                                "randrot_style", "kvquant_style"}
+                                "randrot_style", "kvquant_style",
+                                "blockgtq_style"}
 # Rotation base quantizers that support a pre-RoPE store mode (rotate+quant in
 # pre-RoPE coords, then re-apply RoPE to K_hat so the residual stays post-RoPE).
 _ROTATION_BASE_QUANTIZERS = {"rotatekv_style", "randrot_style"}
@@ -242,6 +243,7 @@ class CAREKVLayer(nn.Module):
                 k_bits, v_bits = self._kivi_bits()
                 K_hat_seq, V_hat_seq = _dispatch_base_kv_quant(
                     bq_name, K_kv, V_kv, k_bits, v_bits,
+                    layer_id=self.layer_id, kv_head=kv_h,
                 )
                 K_hat_seq = K_hat_seq.to(K_kv.dtype)   # (T, D)
                 V_hat_seq = V_hat_seq.to(V_kv.dtype)   # (T, D)
@@ -941,7 +943,12 @@ class CAREKVLayer(nn.Module):
         Returns O (Hq, T, D), attn_w (Hq, T, T), s (Hq, T, T pre-softmax).
         """
         Hq, T, D = Q.shape
-        scores = torch.einsum("hid,hjd->hij", Q, K) / math.sqrt(D)
+        # Compute Q·Kᵀ in float32 and KEEP it float32 through the softmax: for
+        # massive-activation models (e.g. Yi-34B, |Q|,|K|~6e4) the fp16 product
+        # sum overflows to +inf → softmax → NaN. Casting back to fp16 here would
+        # re-introduce the inf, so scores stay float32 (softmax already runs in
+        # float32). No-op numerically for well-scaled models.
+        scores = torch.einsum("hid,hjd->hij", Q.float(), K.float()) / math.sqrt(D)
         if attention_mask is not None:
             am = attention_mask
             if am.dim() == 4:
@@ -956,6 +963,12 @@ class CAREKVLayer(nn.Module):
             scores = scores + causal.unsqueeze(0)
         attn_w = torch.softmax(scores, dim=-1, dtype=torch.float32).to(Q.dtype)
         out = torch.einsum("hij,hjd->hid", attn_w, V)
+        if os.environ.get("CAREKV_NAN_DEBUG") == "1":
+            if not torch.isfinite(out).all():
+                print(f"[nandbg] _causal_attn NONFINITE out: "
+                      f"|Q|max={Q.abs().max().item():.0f} |K|max={K.abs().max().item():.0f} "
+                      f"|V|max={V.abs().max().item():.0f} scores_finite={torch.isfinite(scores).all().item()} "
+                      f"attn_w_finite={torch.isfinite(attn_w).all().item()} out_finite=False", flush=True)
         return out, attn_w, scores
 
     # ─────────────────────────────────────────

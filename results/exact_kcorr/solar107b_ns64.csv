@@ -1,0 +1,5 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,delta_exact_vs_linear,k_reads,v_reads,runtime_s,status
+upstage/SOLAR-10.7B-v1.0,512,64,fp16,6.4511,,,,,0,0,16.2,real
+upstage/SOLAR-10.7B-v1.0,512,64,base_int3,6.8328,,,,,0,0,2769.4,real
+upstage/SOLAR-10.7B-v1.0,512,64,turbo_int3,6.7299,,,,,0,0,19.5,real
+upstage/SOLAR-10.7B-v1.0,512,64,carekv_combined,6.6969,,,,,97365318,103961274,5085.7,real

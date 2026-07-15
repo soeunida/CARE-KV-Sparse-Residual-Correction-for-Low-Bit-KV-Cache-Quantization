@@ -1,0 +1,8 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,delta_exact_vs_linear,k_reads,v_reads,runtime_s,status
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,fp16,9.9918,0.0,-2.4555,-1.9311,,0,0,5.1,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,base_int3,14.0372,4.0454,1.5899,2.1143,,0,0,350.6,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,turbo_int3,12.4473,2.4555,0.0,0.5244,,0,0,5.5,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,carekv_current,11.9229,1.9311,-0.5244,0.0,,20089462,26047882,488.2,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,carekv_current_exact,11.6825,1.6907,-0.7648,-0.2404,-0.2404,20075537,26061807,485.4,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,carekv_combined,10.9185,0.9267,-1.5288,-1.0044,,20695328,25442016,498.7,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,carekv_combined_exact,10.4508,0.459,-1.9965,-1.4721,-0.4677,20893136,25244208,494.9,real

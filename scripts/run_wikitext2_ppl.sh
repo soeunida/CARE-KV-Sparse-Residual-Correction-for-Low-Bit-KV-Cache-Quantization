@@ -32,19 +32,26 @@ export DATASET_CONFIG=wikitext-2-raw-v1
 export DATASET_SPLIT=test
 export MODEL_ID=TinyLlama/TinyLlama-1.1B-Chat-v1.0
 
-# Paper-best CARE-KV knobs (locked)
+# Paper-best CARE-KV knobs (locked) — see CLAUDE.md §2 (promoted 2026-07-15).
 export CAREKV_PACKED_BASE=1
 export CAREKV_SCALE_QUANT=int8
 export CAREKV_PREFILL_RESIDUAL_KIND=both
 export CAREKV_ROUTE_POLICY=joint
 export CAREKV_SCORE_NORMALIZE=1
-export CAREKV_CORRECTION_IMPL=cached
+# combined_kvscore selector is vectorized-only (cached router ignores KSCORE); §10.
+export CAREKV_CORRECTION_IMPL=vectorized
+export CAREKV_K_CORRECTION_MODE=exact   # exact softmax renorm, not 1st-order Jacobian
+export CAREKV_KSCORE_LIVE=1             # combined_kvscore K+V selector
 export CAREKV_BUDGET_POLICY=uniform
 export STORE_ABS_K=2
 export STORE_ABS_V=4
 export READ_ABS_K=2
 export READ_ABS_V=2
 export CAREKV_DEBUG_STATS=1
+
+# To reproduce the pre-2026-07-15 paper-best (linear / cached / current selector):
+#   export CAREKV_CORRECTION_IMPL=cached CAREKV_K_CORRECTION_MODE=linear
+#   unset CAREKV_KSCORE_LIVE
 
 run_one() {
   local mode="$1"; local bits="$2"; local label="$3"

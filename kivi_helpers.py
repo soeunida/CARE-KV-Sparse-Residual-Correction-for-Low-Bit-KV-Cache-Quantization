@@ -165,12 +165,18 @@ def quant_dequant_randrot_v(V: Tensor, bits: int) -> Tensor:
 
 def dispatch_base_kv_quant(
     name: str, K: Tensor, V: Tensor, k_bits: int, v_bits: int,
+    layer_id: int = None, kv_head: int = None,
 ) -> Tuple[Tensor, Tensor]:
     """Return (K_hat, V_hat) for the given base-quantizer name on
     `(..., T, D)` inputs. The CARE-KV cache stores post-RoPE K, so
     `name="kvquant_style"` is treated as the post-RoPE variant here
     (the true pre-RoPE KVQuant is incompatible with the cache layout
     and is blocked in the adapter — see baselines/kvquant_style.py).
+
+    `layer_id` / `kv_head` are required only for calibrated base
+    quantizers (blockgtq_style), which pick a per-(layer, head) quantizer
+    from a registry populated by blockgtq_base.calibrate(); the data-free
+    schemes ignore them.
     """
     if name == "kivi_style":
         return quant_dequant_kivi_k(K, k_bits), quant_dequant_kivi_v(V, v_bits)
@@ -181,7 +187,15 @@ def dispatch_base_kv_quant(
     if name == "kvquant_style":
         # Post-RoPE variant — same shape as KIVI's per-channel K.
         return quant_dequant_kivi_k(K, k_bits), quant_dequant_kivi_v(V, v_bits)
+    if name == "blockgtq_style":
+        # Calibrated, per-(layer, KV-head) RoPE-aware base quantizer.
+        from .blockgtq_base import kv_hat
+        if layer_id is None or kv_head is None:
+            raise ValueError(
+                "blockgtq_style requires layer_id and kv_head at dispatch.")
+        return kv_hat(layer_id, kv_head, K, V)
     raise ValueError(
         f"dispatch_base_kv_quant: unsupported base_quantizer={name!r}. "
-        f"Known: kivi_style, rotatekv_style, randrot_style, kvquant_style"
+        f"Known: kivi_style, rotatekv_style, randrot_style, kvquant_style, "
+        f"blockgtq_style"
     )

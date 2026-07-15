@@ -485,7 +485,8 @@ class CAREKVCache:
         # cost (documented in
         # summaries/carekv_on_base_quantizers.md).
         _BASE_QUANTS_WITH_SIDE_BUFFER = {"kivi_style", "rotatekv_style",
-                                         "randrot_style", "kvquant_style"}
+                                         "randrot_style", "kvquant_style",
+                                         "blockgtq_style"}
         if getattr(cfg, "base_quantizer", "uniform") in _BASE_QUANTS_WITH_SIDE_BUFFER:
             self.base_K_hat_fp16 = torch.zeros(
                 L, Hkv, P, T, D, dtype=torch.float16, device=dev,

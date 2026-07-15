@@ -1,0 +1,8 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,delta_exact_vs_linear,k_reads,v_reads,runtime_s,status
+NousResearch/Llama-2-13b-hf,512,32,fp16,6.1465,0.0,-0.2646,-0.5084,,0,0,16.6,real
+NousResearch/Llama-2-13b-hf,512,32,base_int3,6.8961,0.7496,0.485,0.2412,,0,0,6739.3,real
+NousResearch/Llama-2-13b-hf,512,32,turbo_int3,6.4111,0.2646,0.0,-0.2438,,0,0,16.2,real
+NousResearch/Llama-2-13b-hf,512,32,carekv_current,6.6549,0.5084,0.2438,0.0,,47959045,56898555,10799.6,real
+NousResearch/Llama-2-13b-hf,512,32,carekv_current_exact,6.607,0.4605,0.1959,-0.0479,-0.0479,47986519,56871081,11312.3,real
+NousResearch/Llama-2-13b-hf,512,32,carekv_combined,6.5003,0.3538,0.0892,-0.1546,,58823172,46034428,10469.4,real
+NousResearch/Llama-2-13b-hf,512,32,carekv_combined_exact,6.3424,0.1959,-0.0687,-0.3125,-0.1579,59427646,45429954,10533.9,real

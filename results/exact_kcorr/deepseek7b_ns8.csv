@@ -1,0 +1,6 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,delta_exact_vs_linear,k_reads,v_reads,runtime_s,status
+deepseek-ai/deepseek-llm-7b-base,512,8,fp16,9.4635,0.0,-0.4939,-0.7535,,0,0,16.2,real
+deepseek-ai/deepseek-llm-7b-base,512,8,base_int3,10.7089,1.2454,0.7515,0.4919,,0,0,1134.2,real
+deepseek-ai/deepseek-llm-7b-base,512,8,turbo_int3,9.9574,0.4939,0.0,-0.2596,,0,0,9.1,real
+deepseek-ai/deepseek-llm-7b-base,512,8,carekv_current,10.217,0.7535,0.2596,0.0,,6654641,9073999,2460.3,real
+deepseek-ai/deepseek-llm-7b-base,512,8,carekv_current_exact,10.1302,0.6667,0.1728,-0.0868,-0.0868,6658724,9069916,2431.5,real

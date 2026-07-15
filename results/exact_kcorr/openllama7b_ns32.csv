@@ -1,0 +1,8 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,delta_exact_vs_linear,k_reads,v_reads,runtime_s,status
+openlm-research/open_llama_7b_v2,512,32,fp16,8.0538,0.0,-0.4795,-0.5022,,0,0,9.5,real
+openlm-research/open_llama_7b_v2,512,32,base_int3,8.7886,0.7348,0.2553,0.2326,,0,0,3928.8,real
+openlm-research/open_llama_7b_v2,512,32,turbo_int3,8.5333,0.4795,0.0,-0.0227,,0,0,9.5,real
+openlm-research/open_llama_7b_v2,512,32,carekv_current,8.556,0.5022,0.0227,0.0,,29428443,37680421,6609.3,real
+openlm-research/open_llama_7b_v2,512,32,carekv_current_exact,8.5372,0.4834,0.0039,-0.0188,-0.0188,29420249,37688615,6624.5,real
+openlm-research/open_llama_7b_v2,512,32,carekv_combined,8.2907,0.2369,-0.2426,-0.2653,,30771694,36337170,6518.8,real
+openlm-research/open_llama_7b_v2,512,32,carekv_combined_exact,8.2198,0.166,-0.3135,-0.3362,-0.0709,31054317,36054547,6501.5,real

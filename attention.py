@@ -21,6 +21,9 @@ CAREKVMultiHeadAttention
 Correction formulas:
     ΔO_V = Σ_t a_t · R_V,t                              (sum over selected token blocks)
     ΔO_K ≈ Σ_t a_t · (q · R_K,t) · (V_base,t − O_base)   (1st-order Jacobian)
+
+`CAREKV_K_CORRECTION_MODE=exact` replaces the Jacobian with the exact softmax
+renormalization — see exact_softmax_correction below.
 """
 
 from __future__ import annotations
@@ -56,6 +59,56 @@ def set_chunk_recorder(rec):
     """Set/clear the chunked-equivalence diagnostic recorder (list or None)."""
     global _CHUNK_REC
     _CHUNK_REC = rec
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Exact K correction (CAREKV_K_CORRECTION_MODE=exact)
+#
+# The default ΔO_K is the 1st-order Jacobian of softmax w.r.t. the key
+# residual.  Writing δs_t = (q · R_K,t)/√D for the exact logit perturbation
+# carried by the *selected* K slots, that Jacobian is the δs→0 limit of
+#
+#     a_new = softmax(s_base + δs) = a_base·e^δs / Σ_u a_base,u·e^δs,u
+#     O_new = Σ_t a_new,t · (V_base,t + R_V,t·[t selected])
+#
+# which is directly computable from the same slot reads: no full R_K/R_V and
+# no extra reads, one exp + one matmul over (Q, N).  The linear form diverges
+# once |δs| ≳ 1 — exactly the outlier-heavy-K regime where CARE-KV loses to
+# rotation-based baselines — because it extrapolates a convex exponential off
+# its tangent.  a_new is a softmax, so the exact form is bounded by
+# construction and needs no `k_corr_scale` damping (a global 0.1 that happens
+# to stand in for the 1/√D the linear apply path omits).
+#
+# Two properties the callers rely on:
+#   - no slots selected ⇒ δs ≡ 0, R_V ≡ 0 ⇒ a_new == a_base ⇒ ΔO == 0 exactly.
+#     This preserves the READ=0 ≡ base_quant invariant bit-for-bit.
+#   - kind=="v" ⇒ δs ≡ 0 ⇒ ΔO == Σ_t a_base,t·R_V,t, i.e. exact mode is a
+#     no-op relabelling of the existing V-only correction.
+# ─────────────────────────────────────────────────────────────────────────
+
+def k_correction_mode() -> str:
+    m = os.environ.get("CAREKV_K_CORRECTION_MODE", "linear").lower()
+    if m not in {"linear", "exact"}:
+        raise ValueError(f"Unknown CAREKV_K_CORRECTION_MODE={m}")
+    return m
+
+
+def exact_softmax_correction(
+    A: Tensor,                      # (Q, N) base attention weights, rows sum to 1
+    ds: Tensor,                     # (Q, N) exact logit perturbation from K slots
+    V_base: Tensor,                 # (N, D) dequantized base V
+    O_base: Tensor,                 # (Q, D) base attention output
+    RV_full: Optional[Tensor] = None,   # (N, D) per-token V residual (selected rows)
+    sel_tok: Optional[Tensor] = None,   # (Q, N) bool, which tokens carry a read V slot
+) -> Tensor:
+    """ΔO (Q, D) from renormalizing the base softmax under the exact δs."""
+    w = torch.exp(ds - ds.amax(dim=1, keepdim=True))
+    a_new = A * w
+    a_new = a_new / a_new.sum(dim=1, keepdim=True).clamp(min=1e-30)
+    O_new = a_new @ V_base
+    if RV_full is not None and sel_tok is not None:
+        O_new = O_new + (a_new * sel_tok.to(a_new.dtype)) @ RV_full
+    return O_new - O_base
 
 
 def attention_output_residual_scores(A: Tensor, resid: Tensor, kind: str) -> Tensor:
@@ -179,6 +232,13 @@ def apply_slot_corrections(
     delta_V = torch.zeros(D, device=device, dtype=torch.float32)
     delta_K = torch.zeros(D, device=device, dtype=torch.float32)
 
+    mode = k_correction_mode()
+    N_valid = a_base.shape[0]
+    if mode == "exact":
+        ds_full = torch.zeros(N_valid, device=device, dtype=torch.float32)
+        RV_full = torch.zeros(N_valid, D, device=device, dtype=torch.float32)
+        sel_v_tok = torch.zeros(N_valid, device=device, dtype=torch.bool)
+
     # Route stored slots under read budget (kind-aware: budget applies only
     # to the requested slot type(s), so V-only doesn't waste budget on K and
     # vice versa).
@@ -232,6 +292,9 @@ def apply_slot_corrections(
 
         blk_a = a_base[p_start + t0 : p_start + t1_valid]
         delta_V += (blk_a.unsqueeze(-1) * R_V_blk).sum(0)
+        if mode == "exact":
+            RV_full[p_start + t0 : p_start + t1_valid] = R_V_blk.float()
+            sel_v_tok[p_start + t0 : p_start + t1_valid] = True
         n_v_applied += 1
 
     # ── K correction: ΔO_K ≈ Σ_t a_t · (q · R_K,t) · (V_t − O_base) ──
@@ -267,9 +330,23 @@ def apply_slot_corrections(
 
         weights = page_a * qdot_rk
         delta_K += (weights.unsqueeze(-1) * V_diff).sum(0)
+        if mode == "exact":
+            ds_full[p_start:p_end] += qdot_rk.float()
         n_k_applied += 1
 
-    delta_O = delta_V + k_corr_scale * delta_K
+    # See vectorized_joint_correction: with no K slots read the exact form is
+    # algebraically the linear V term, so fall through and keep it bit-identical.
+    if mode == "exact" and n_k_applied > 0:
+        delta_O = exact_softmax_correction(
+            A=a_base.unsqueeze(0),
+            ds=(ds_full / math.sqrt(D)).unsqueeze(0),
+            V_base=V_base,
+            O_base=O_base.unsqueeze(0),
+            RV_full=RV_full,
+            sel_tok=sel_v_tok.unsqueeze(0),
+        ).squeeze(0)
+    else:
+        delta_O = delta_V + k_corr_scale * delta_K
 
     if debug_stats is not None:
         debug_stats.setdefault("v_slots_read", 0)
@@ -799,6 +876,8 @@ def vectorized_joint_correction(
     import os as _os
     _qclamp = float(_os.environ.get("CAREKV_K_QDOTR_CLAMP_PCT", "0") or 0)
     _nguard = float(_os.environ.get("CAREKV_K_NORM_GUARD_PCT", "0") or 0)
+    mode = k_correction_mode()
+    wK = None
     n_k_reads = 0
     if sel_k is not None and sel_k.any():
         # K_norm_guard: zero out selection for slots with too-large residual norm.
@@ -819,12 +898,11 @@ def vectorized_joint_correction(
                                      min(max(_qclamp / 100.0, 0.0), 1.0))
                 qdotr_full = qdotr_full.clamp(-thr, thr)
             wK[:, ps:ps + nv] += sel_k[:, si].float().unsqueeze(1) * qdotr_full
-        AwK = A * wK                                                   # (Q, N)
-        delta_K = AwK @ V_base - AwK.sum(dim=1, keepdim=True) * O_base
-        delta = delta + k_corr_scale * delta_K
         n_k_reads = int(sel_k.sum().item())
 
     # ── V apply ──
+    V_resid_full = None
+    sel_tok = None
     n_v_reads = 0
     if sel_v is not None and sel_v.any():
         V_resid, v_starts, v_lens, v_err, _vids = v_idx
@@ -838,9 +916,24 @@ def vectorized_joint_correction(
         cov_idx = covered.nonzero(as_tuple=True)[0]
         V_resid_full[cov_idx] = V_resid[token_to_slot[cov_idx], local_pos[cov_idx]].float()
         sel_tok = sel_v[:, token_to_slot.clamp(min=0)] & covered.unsqueeze(0)  # (Q,N)
-        weighted_a = A * sel_tok.float()
-        delta = delta + weighted_a @ V_resid_full
         n_v_reads = int(sel_v.sum().item())
+
+    # ── combine ──
+    # exact: one renormalized softmax carries both the K logit shift and the V
+    # residual.  With no K slots read it is algebraically the linear V term, so
+    # fall through to keep that case bit-identical (and READ=0 → delta stays 0).
+    if mode == "exact" and wK is not None:
+        delta = exact_softmax_correction(
+            A=A, ds=wK / math.sqrt(D), V_base=V_base, O_base=O_base,
+            RV_full=V_resid_full, sel_tok=sel_tok,
+        )
+    else:
+        if wK is not None:
+            AwK = A * wK                                               # (Q, N)
+            delta_K = AwK @ V_base - AwK.sum(dim=1, keepdim=True) * O_base
+            delta = delta + k_corr_scale * delta_K
+        if sel_tok is not None:
+            delta = delta + (A * sel_tok.float()) @ V_resid_full
 
     if debug_stats is not None:
         debug_stats["v_slots_read"] = debug_stats.get("v_slots_read", 0) + n_v_reads

@@ -1,0 +1,9 @@
+model,mode,seq_len,num_samples,k_avg_bits,v_bits,calib_tokens,seed,ppl,total_tokens,seconds,K_reads,V_reads,peak_gpu_mem_MB
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,standalone_blockgtq,512,16,3.0,3,2048,0,13.0072,8176,1.37,0,0,2416.93
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,standalone_blockgtq,1024,8,3.0,3,2048,0,11.012699,8184,0.74,0,0,2617.74
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,base_quant_blockgtq,1024,8,3.0,3,2048,0,11.016582,8184,77.79,0,0,2885.52
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,base_quant_blockgtq,512,16,3.0,3,2048,0,13.073211,8176,77.4,0,0,2643.95
+mistralai/Mistral-7B-v0.3,standalone_blockgtq,1024,4,3.0,3,2048,0,6.315402,4092,0.92,0,0,14994.79
+mistralai/Mistral-7B-v0.3,standalone_blockgtq,512,8,3.0,3,2048,0,7.792498,4088,1.78,0,0,14789.26
+mistralai/Mistral-7B-v0.3,base_quant_blockgtq,1024,4,3.0,3,2048,0,6.3412,4092,152.64,0,0,16380.52
+mistralai/Mistral-7B-v0.3,base_quant_blockgtq,512,8,3.0,3,2048,0,7.819739,4088,219.67,0,0,16094.78

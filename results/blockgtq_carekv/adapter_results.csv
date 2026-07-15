@@ -1,0 +1,5 @@
+model,seq_len,num_samples,B_ppl,C_ppl,delta,delta_pct,C_k_reads,C_v_reads,B_k_reads,B_v_reads,B_runtime_s,C_runtime_s
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,16,12.982,12.7949,-0.1871,-1.441,10155378,12913294,0,0,138.9,330.5
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,1024,8,11.0135,10.8169,-0.1966,-1.785,10231245,12837427,0,0,140.7,327.4
+mistralai/Mistral-7B-v0.3,512,8,7.778,7.7072,-0.0708,-0.91,7471333,9305883,0,0,199.3,571.7
+mistralai/Mistral-7B-v0.3,1024,4,6.3606,6.3268,-0.0338,-0.531,7417436,9359780,0,0,237.7,581.9

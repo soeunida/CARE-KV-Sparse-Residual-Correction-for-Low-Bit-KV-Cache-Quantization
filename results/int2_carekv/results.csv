@@ -1,0 +1,5 @@
+model,mode,seq_len,num_samples,k_avg_bits,v_bits,calib_tokens,seed,ppl,total_tokens,seconds,K_reads,V_reads,peak_gpu_mem_MB
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,base_quant_blockgtq,64,4,2.0,2,2048,0,19.900498,252,4.49,0,0,2456.06
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,carekv_blockgtq,64,4,2.0,2,2048,0,17.344025,252,959.0,397964,322932,2665.92
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,base_quant_blockgtq,64,4,3.0,3,2048,0,18.009348,252,2.8,0,0,2466.49
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,carekv_blockgtq,64,4,3.0,3,2048,0,17.426612,252,484.56,392613,328283,2676.24

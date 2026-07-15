@@ -1,0 +1,2 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,delta_exact_vs_linear,k_reads,v_reads,runtime_s,status
+NousResearch/Llama-2-13b-hf,512,64,fp16,6.5317,,,,,0,0,18.0,real

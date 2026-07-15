@@ -1,0 +1,8 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_current,delta_exact_vs_linear,k_reads,v_reads,runtime_s,status
+upstage/SOLAR-10.7B-v1.0,512,32,fp16,6.0587,0.0,-0.2763,-0.235,,0,0,11.9,real
+upstage/SOLAR-10.7B-v1.0,512,32,base_int3,6.4307,0.372,0.0957,0.137,,0,0,1499.8,real
+upstage/SOLAR-10.7B-v1.0,512,32,turbo_int3,6.335,0.2763,0.0,0.0413,,0,0,14.2,real
+upstage/SOLAR-10.7B-v1.0,512,32,carekv_current,6.2937,0.235,-0.0413,0.0,,44924153,55739143,2255.0,real
+upstage/SOLAR-10.7B-v1.0,512,32,carekv_current_exact,6.2856,0.2269,-0.0494,-0.0081,-0.0081,44993662,55669634,2256.9,real
+upstage/SOLAR-10.7B-v1.0,512,32,carekv_combined,6.3013,0.2426,-0.0337,0.0076,,48951913,51711383,2339.3,real
+upstage/SOLAR-10.7B-v1.0,512,32,carekv_combined_exact,6.1605,0.1018,-0.1745,-0.1332,-0.1408,49694004,50969292,2340.9,real

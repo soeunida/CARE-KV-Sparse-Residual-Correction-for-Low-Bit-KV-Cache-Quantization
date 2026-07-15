@@ -1,0 +1,2 @@
+model,mode,seq_len,num_samples,k_avg_bits,v_bits,calib_tokens,seed,ppl,total_tokens,seconds,K_reads,V_reads,peak_gpu_mem_MB
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,carekv_blockgtq,64,4,3.0,3,2048,0,17.331782,252,552.66,357628,2820,2676.24
