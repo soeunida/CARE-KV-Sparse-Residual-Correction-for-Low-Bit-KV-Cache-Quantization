@@ -110,6 +110,18 @@ def test_exact_matches_brute_force_and_is_bounded():
     err = (got.double() - ref).abs().max().item()
     check("exact + V residual == brute force", err < 1e-6, f"Δ={err:.2e}")
 
+    # (a') fp16 inputs must work (the cached decode path passes fp16 V_base/O_base,
+    #      which crashed the first exact impl: "mat1 and mat2 have different dtype").
+    ds_f = torch.randn(Q, N) * 0.7
+    got32 = exact_softmax_correction(A, ds_f, V, O)
+    got16 = exact_softmax_correction(A.half(), ds_f.half(), V.half(), O.half())
+    check("exact accepts fp16 inputs, returns fp16",
+          got16.dtype == torch.float16, f"dtype={got16.dtype}")
+    check("exact fp16 ≈ fp32 (same args, no residual)",
+          (got16.float() - got32).abs().max().item() < 5e-3)
+    _ = exact_softmax_correction(A.half(), ds_f.half(), V.half(), O.half(),
+                                 RV.half(), sel)  # fp16 + residual must not raise
+
     # (b) δs → 0 limit: exact and the 1st-order Jacobian share a tangent
     for eps in (1e-2, 1e-3, 1e-4):
         d_small = torch.randn(Q, N) * eps

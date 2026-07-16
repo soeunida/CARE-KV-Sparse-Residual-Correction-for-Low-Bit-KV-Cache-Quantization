@@ -37,7 +37,7 @@ import math
 from .cache import CAREKVCache, CacheConfig, PageMeta
 from .quantizer import QuantConfig, dequantize
 from .residual_router import ResidualRouter, _resolve_read_budgets, EPS
-from .residual_store import unpack_4bit
+from .residual_store import unpack_4bit, unpack_residual
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -101,14 +101,21 @@ def exact_softmax_correction(
     RV_full: Optional[Tensor] = None,   # (N, D) per-token V residual (selected rows)
     sel_tok: Optional[Tensor] = None,   # (Q, N) bool, which tokens carry a read V slot
 ) -> Tensor:
-    """ΔO (Q, D) from renormalizing the base softmax under the exact δs."""
+    """ΔO (Q, D) from renormalizing the base softmax under the exact δs.
+
+    Computes in float32 regardless of caller dtype — the cached decode path
+    passes fp16 V_base/O_base, while the vectorized prefill path pre-casts to
+    float; both must work. Returns ΔO in O_base's original dtype.
+    """
+    out_dtype = O_base.dtype
+    A = A.float(); ds = ds.float(); V_base = V_base.float(); O_base = O_base.float()
     w = torch.exp(ds - ds.amax(dim=1, keepdim=True))
     a_new = A * w
     a_new = a_new / a_new.sum(dim=1, keepdim=True).clamp(min=1e-30)
     O_new = a_new @ V_base
     if RV_full is not None and sel_tok is not None:
-        O_new = O_new + (a_new * sel_tok.to(a_new.dtype)) @ RV_full
-    return O_new - O_base
+        O_new = O_new + (a_new * sel_tok.to(a_new.dtype)) @ RV_full.float()
+    return (O_new - O_base).to(out_dtype)
 
 
 def attention_output_residual_scores(A: Tensor, resid: Tensor, kind: str) -> Tensor:
@@ -283,7 +290,7 @@ def apply_slot_corrections(
         else:
             packed, scale = cache.read_v_residual(slot)
             numel_full = cfg.v_token_block * D
-            R_V_blk_full = unpack_4bit(packed, scale, numel_full).reshape(
+            R_V_blk_full = unpack_residual(packed, scale, numel_full, cfg.residual_bits).reshape(
                 cfg.v_token_block, D
             ).to(device)
             if slot_cache is not None:
@@ -314,7 +321,7 @@ def apply_slot_corrections(
         else:
             packed, scale = cache.read_k_residual(slot)
             numel_full = cfg.page_size * cfg.k_channel_group
-            R_K_blk_full = unpack_4bit(packed, scale, numel_full).reshape(
+            R_K_blk_full = unpack_residual(packed, scale, numel_full, cfg.residual_bits).reshape(
                 cfg.page_size, cfg.k_channel_group
             ).to(device)
             if slot_cache is not None:
@@ -413,7 +420,7 @@ def _build_v_slot_index(cache: CAREKVCache, cfg: CacheConfig,
                 continue
             packed, scale = cache.read_v_residual(slot)
             numel_full = cfg_v_block * D
-            r = unpack_4bit(packed, scale, numel_full).reshape(
+            r = unpack_residual(packed, scale, numel_full, cfg.residual_bits).reshape(
                 cfg_v_block, D
             ).to(device)
             resids.append(r)
@@ -554,7 +561,7 @@ def _build_k_slot_index(cache, cfg, layer_id, kv_head, page_ids, device):
                     continue
                 packed, scale = cache.read_k_residual(slot)
                 numel_full = cfg.page_size * cfg.k_channel_group
-                r_full = unpack_4bit(packed, scale, numel_full).reshape(
+                r_full = unpack_residual(packed, scale, numel_full, cfg.residual_bits).reshape(
                     cfg.page_size, cfg.k_channel_group).to(device)
                 R_Ks.append(r_full[:n_valid].float())
                 cgs.append(cg)
