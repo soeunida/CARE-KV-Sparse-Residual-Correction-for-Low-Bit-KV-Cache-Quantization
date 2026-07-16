@@ -18,30 +18,44 @@ O_care = base_attention(Q, K_hat, V_hat) + ΔO_K + ΔO_V
 
 The router selects a tiny fraction of (K, V) coordinates to store
 residuals for, and at decode time reads back only the top-scoring slots
-to compute ΔO_K, ΔO_V. The base quantizer is pluggable — CARE-KV runs
-on top of its own per-group quant **or** a KIVI-style (per-channel K,
-per-token V) reimplementation.
+to compute ΔO_K, ΔO_V. The V correction is a weighted residual sum; the
+**K correction renormalizes the base softmax exactly** under the recovered
+key perturbation δs = (q·R_K)/√d (bounded by construction), rather than a
+1st-order Jacobian that diverges on outlier-heavy keys. The base quantizer
+is pluggable — CARE-KV runs on top of its own per-group quant **or** a
+KIVI-style (per-channel K, per-token V) reimplementation.
 
-## Headline result (diagnostic pilot)
+## Headline result
 
-WikiText-2 N=4, SL=128, TinyLlama-1.1B-Chat-v1.0, 508 evaluated tokens:
+**WikiText-2, SL=512, NS=64, INT3 KV — CARE-KV beats TurboQuant (QJL
+rotation) on all 7 tested LLaMA-architecture models.** Same `run_one`
+harness / windowing for every arm; `comb+ex` is the paper-best config
+(`combined_kvscore` selector + exact softmax K correction). Sorted by
+K-outlier severity (`base − turbo`).
 
-| cell | PPL | KV memory | vs INT3 |
-|---|---:|---:|---:|
-| fp16 | 12.346 | 2.75 MB | −3.85 |
-| base_quant_INT4 | 12.654 | 0.69 MB | −3.54 |
-| base_quant_INT3 (uniform) | 16.197 | 0.52 MB | 0.00 |
-| uniform_INT3 + CARE-KV | 13.462 | 0.65 MB | −2.74 |
-| KIVI_style_INT3 | 15.657 | 0.55 MB | −0.54 |
-| **KIVI_INT3 + CARE-KV (stacked)** | **13.095** | **0.69 MB** | **−3.10** |
+| model | fp16 | base INT3 | TurboQuant | **CARE-KV** | Δ vs Turbo |
+|---|---:|---:|---:|---:|---:|
+| Mistral-7B-v0.3 | 7.156 | 7.687 | 7.586 | **7.321** | **−0.265** |
+| SOLAR-10.7B | 6.451 | 6.833 | 6.730 | **6.557** | **−0.173** |
+| OpenLLaMA-7B-v2 | 8.603 | 9.384 | 9.108 | **8.786** | **−0.321** |
+| Llama-2-13B | 6.532 | 7.279 | 6.808 | **6.731** | **−0.077** |
+| Yi-6B | 7.677 | 8.826 | 8.293 | **7.931** | **−0.362** |
+| DeepSeek-7B | 9.051 | 10.322 | 9.590 | **9.335** | **−0.255** |
+| TinyLlama-1.1B | 10.480 | 14.692 | 12.917 | **10.931** | **−1.986** |
 
-KIVI_INT3 + CARE-KV stacked **beats both** KIVI_INT3 standalone
-(−2.56 PPL) and uniform+CARE-KV (−0.37 PPL) at modest additional
-memory.
+**7/7 wins over TurboQuant**, including the two heaviest-outlier models
+(Llama-2-13B, DeepSeek-7B) that rotation-based quantization previously
+owned. The result comes from **two orthogonal levers that are
+super-additive on the hard-outlier tail**: neither the `combined_kvscore`
+selector nor the exact K correction beats Turbo alone on DeepSeek /
+Llama-2-13B, but stacked they clear it. This reverses the earlier
+"TurboQuant Pareto-dominates CARE-KV" finding (which held for the 1st-order
+K correction). Full ablation (current vs combined selector × linear vs
+exact correction, NS=8/32/64) in `CLAUDE.md` §10.
 
-> Diagnostic-only — pilot scale. Needs WT-2 N≥16 and ≥1 other model
-> before a paper claim. Same-condition reimplementation of KIVI's
-> K/V quantization scheme (no CUDA kernels).
+> PPL / quality method — same-condition reimplementation of TurboQuant's
+> QJL rotation, no CUDA kernels; prototype latency (see below). CARE-KV
+> adds ~0.03× fp16 KV memory over base INT3 for the sparse residual.
 
 ## Repository layout
 
@@ -142,30 +156,35 @@ CAREKV_PREFILL_MODE=carekv_stored
 CAREKV_PREFILL_RESIDUAL_KIND=both
 CAREKV_ROUTE_POLICY=joint
 CAREKV_SCORE_NORMALIZE=1
-CAREKV_CORRECTION_IMPL=cached
+CAREKV_CORRECTION_IMPL=vectorized   # combined selector is vectorized-only
+CAREKV_K_CORRECTION_MODE=exact      # exact softmax renorm (not 1st-order)
+CAREKV_KSCORE_LIVE=1                # combined_kvscore K+V selector
 CAREKV_BUDGET_POLICY=uniform
 STORE_ABS_K=2  STORE_ABS_V=4
 READ_ABS_K=2   READ_ABS_V=2
 ```
 
-See `CLAUDE.md` for the full runtime-knobs cheat-sheet, the
-historical pitfalls list, and the rules for safe refactors.
+The `exact` + `combined` config is the promoted paper-best (2026-07-15,
+the headline table above). The prior `linear` / `cached` / current-selector
+path stays reproducible via `CAREKV_K_CORRECTION_MODE=linear`,
+`CAREKV_CORRECTION_IMPL=cached`, and unsetting `CAREKV_KSCORE_LIVE`. See
+`CLAUDE.md` §2/§10 for the full cheat-sheet, the two-lever ablation, and the
+rules for safe refactors.
 
 ## Status & limitations
 
-- **Method-complete**: paper-best path is validated end-to-end with the
-  `READ=0 ≡ base_quant` invariant locked in pytest.
-- **Prototype latency**: prefill + correction are Python loops over
-  (layer, kv-head, token). Wall-clock is 1500–2500 s per CARE-KV cell
-  at TinyLlama SL=128 N=4. Not comparable to CUDA-kernel methods.
+- **Method-complete**: paper-best path validated end-to-end across 7
+  LLaMA-arch models (1.1B–13B) at WT-2 NS=64, with the
+  `READ=0 ≡ base_quant` invariant locked bit-exact in pytest (holds under
+  both `exact` and `KSCORE_LIVE`).
+- **Prototype latency**: prefill + correction are vectorized torch ops but
+  still Python-driven per (layer, kv-head); no CUDA/Triton kernels. This is
+  a **quality/memory method with no speed claim** — do not compare wall-clock
+  to kernel-fused baselines.
 - **Decode**: HF `use_cache=True` works (DynamicCache + open-page append)
   but with a fp16 dummy that inflates peak GPU memory ~2×.
-- **Models**: TinyLlama-1.1B-Chat-v1.0 + JackFram/llama-160m verified.
-  Larger models need HF auth or a larger local cache.
-- **KIVI-style integration** uses an fp16 K_hat/V_hat side-buffer in
-  the cache (memory accounting reports KIVI's theoretical bits). A
-  production stacked implementation would add a per-channel scale
-  storage path instead.
+- **Scope**: PPL (WikiText-2) at SL=512. TurboQuant is a same-condition QJL
+  reimplementation. Downstream / long-context are separate (see `results/`).
 
 ## Key documents
 

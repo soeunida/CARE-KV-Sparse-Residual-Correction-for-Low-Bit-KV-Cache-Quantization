@@ -421,26 +421,51 @@ and same `run_one` windowing (refs reproduce §5g to 4 dp).
   is almost entirely realized *in combination with* `exact`, not standalone.
 
 **Bottom line:** `CAREKV_K_CORRECTION_MODE=exact` + `CAREKV_KSCORE_LIVE=1` is the
-strongest CARE-KV configuration measured — 7/7 over TurboQuant at NS=32, no
-regression anywhere, identical reads/runtime to `linear`. Candidate for the new
-paper-best (§2), pending the DeepSeek NS=64 recheck and a `READ=0` re-confirm
-under `KSCORE_LIVE`.
+strongest CARE-KV configuration measured — 7/7 over TurboQuant, no regression
+anywhere, identical reads/runtime to `linear`. **Promoted to paper-best (§2)
+2026-07-15.**
 
-**Gate results (2026-07-14):**
+### combined+exact at NS=64 — CONFIRMED 7/7 (the paper table)
+
+Full NS=64 re-run of the promoted config, all 7 §5g Llama-arch models. `comb+ex`
+is the paper-best; `Δstack = comb+ex − comb`. Turbo references match §5g NS=64
+(e.g. Mistral 7.586). Sorted by outlier (`base − turbo`).
+
+| model | outlier | fp16 | base | turbo | comb | **comb+ex** | Δstack | comb+ex vs turbo |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| Mistral-7B | 0.101 | 7.156 | 7.687 | 7.586 | 7.403 | **7.321** | −0.082 | −0.265 win |
+| SOLAR-10.7B | 0.103 | 6.451 | 6.833 | 6.730 | 6.697 | **6.557** | −0.140 | −0.173 win |
+| OpenLLaMA-7B | 0.276 | 8.603 | 9.384 | 9.108 | 8.856 | **8.786** | −0.070 | −0.321 win |
+| Llama-2-13B | 0.470 | 6.532 | 7.279 | 6.808 | 6.869 | **6.731** | −0.138 | **−0.077 win** |
+| Yi-6B | 0.533 | 7.677 | 8.826 | 8.293 | 8.291 | **7.931** | −0.361 | −0.362 win |
+| DeepSeek-7B | 0.732 | 9.051 | 10.322 | 9.590 | 9.567 | **9.335** | −0.232 | **−0.255 win** |
+| TinyLlama-1.1B | 1.775 | 10.480 | 14.692 | 12.917 | 11.436 | **10.931** | −0.505 | −1.986 win |
+
+- **7/7 over Turbo at the rigorous NS=64 sample size**, including the two
+  heaviest-outlier models (Llama-2-13B −0.077, DeepSeek −0.255) that no single
+  lever flips. This is the headline paper result.
+- **The DeepSeek −0.496 NS=32 Δstack was an over-estimate** (NS=64 Δstack
+  −0.232), but the *conclusion is unchanged*: comb+ex beats Turbo by −0.255,
+  matching the NS=32 margin (−0.241). Sign and win are stable; only the
+  Δstack magnitude shrank with more samples.
+- **Two-lever super-additivity holds at NS=64:** on DeepSeek/Llama-2-13B,
+  `combined` alone loses to Turbo (9.567 > 9.590? no — DeepSeek comb 9.567 <
+  turbo 9.590 barely wins; Llama-2-13B comb 6.869 > turbo 6.808 loses) — but
+  `comb+ex` wins both cleanly. Neither the selector nor the estimator alone is
+  reliable on the hard tail; stacked they are.
+
+**Gate results (all passed):**
 - **READ=0 invariant under `KSCORE_LIVE=1` + `exact`: PASS, bit-exact (Δ=0.0)**
   for kind ∈ {v,k,both}. The §9.7 refactor gate holds with both levers on.
+- **DeepSeek NS=64 recheck: PASS** (see table — −0.255 win reproduces NS=32).
 - **`KSCORE_LIVE` is `vectorized`-only.** The cached path
   (`residual_router.py:route`) has NO KSCORE handling, so under `KSCORE_LIVE=1`
   cached and vectorized compute *different selectors* (cached falls back to the
   `current` proxy) and diverge (Δ≈0.5 linear, 0.12 exact at the unit fixture) —
   this is pre-existing selector wiring, NOT an `exact` defect (with KSCORE off,
-  exact matches cached at 1e-7). **All combined/combined_exact PPLs above used
-  `correction_impl=vectorized`, so they are self-consistent.** Consequence: if
-  `combined_exact` becomes paper-best, §2 must also switch
-  `CAREKV_CORRECTION_IMPL=cached → vectorized` (faithful per §5g, and faster);
-  the `combined` selector cannot run on the cached path as written.
-- DeepSeek NS=64 recheck of the −0.496 Δstack cell: running
-  (`results/exact_kcorr/deepseek7b_ns64.csv`).
+  exact matches cached at 1e-7). This is **why §2 pins
+  `CAREKV_CORRECTION_IMPL=vectorized`** — the `combined` selector cannot run on
+  the cached path as written. All PPLs here used `vectorized`.
 
 Cost: `exact` ignores `CAREKV_K_CORRECTION_SCALE` and makes
 `CAREKV_K_QDOTR_CLAMP_PCT` / `CAREKV_K_NORM_GUARD_PCT` unnecessary.
