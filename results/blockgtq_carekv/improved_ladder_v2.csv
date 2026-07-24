@@ -1,0 +1,4 @@
+model,seq_len,num_samples,config,config_full,B_ppl,C_ppl,delta,delta_pct,C_k_reads,C_v_reads,B_k_reads,B_v_reads,B_runtime_s,C_runtime_s
+deepseek-ai/deepseek-llm-7b-base,512,32,fine_rb8,kcg16_vtb2_exact_rb8_s88_r88,8.5867,8.4751,-0.1116,-1.3,119945348,131712892,0,0,3494.6,94970.7
+01-ai/Yi-34B,512,32,cur_rb8,kcg32_vtb4_linear_rb8_s24_r22_vectorized,5.4006,5.4025,0.0019,0.035,97487769,122713191,0,0,959.7,4082.6
+openlm-research/open_llama_7b_v2,512,32,fine_rb8,kcg16_vtb2_exact_rb8_s88_r88_vectorized,8.1838,8.0944,-0.0894,-1.092,127184903,141250553,0,0,3537.4,99745.6

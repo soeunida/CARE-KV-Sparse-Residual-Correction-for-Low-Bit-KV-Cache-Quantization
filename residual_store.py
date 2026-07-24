@@ -146,6 +146,36 @@ def unpack_4bit(packed: Tensor, scale: Tensor, numel: int) -> Tensor:
     return signed.float() * scale.float()
 
 
+def pack_8bit(x: Tensor, scale_hint: Optional[Tensor] = None) -> Tuple[Tensor, Tensor]:
+    """Quantize x to 8-bit symmetric, stored as int8 (no bit-packing).
+    Returns: codes int8 (numel,), scale (fp16, shape (1,)). 2× the bytes of
+    pack_4bit but ~2× finer residual → materially better correction."""
+    max_abs = x.abs().max().clamp(min=1e-8)
+    s = max_abs / 127.0
+    codes = (x / s).round().clamp(-128, 127).to(torch.int8).flatten()
+    return codes, s.to(torch.float16).unsqueeze(0)
+
+
+def unpack_8bit(packed: Tensor, scale: Tensor, numel: int) -> Tensor:
+    """Unpack int8 → float (× scale)."""
+    return packed[:numel].to(torch.int8).float() * scale.float()
+
+
+def pack_residual(x: Tensor, bits: int,
+                  scale_hint: Optional[Tensor] = None) -> Tuple[Tensor, Tensor]:
+    """Dispatch residual packing by bit-width (4 or 8)."""
+    if bits == 8:
+        return pack_8bit(x, scale_hint)
+    return pack_4bit(x, scale_hint)
+
+
+def unpack_residual(packed: Tensor, scale: Tensor, numel: int, bits: int) -> Tensor:
+    """Dispatch residual unpacking by bit-width (4 or 8)."""
+    if bits == 8:
+        return unpack_8bit(packed, scale, numel)
+    return unpack_4bit(packed, scale, numel)
+
+
 # ─────────────────────────────────────────────
 # Residual candidate record
 # ─────────────────────────────────────────────
@@ -284,7 +314,7 @@ class ResidualStoreManager:
             prior = err_norm * self.sensitivity * struct_prior
 
             # Pack the full padded page so slot size is fixed; padded rows are 0.
-            packed, scale = pack_4bit(R_K[:, c_start:c_end])
+            packed, scale = pack_residual(R_K[:, c_start:c_end], cfg.residual_bits)
 
             k_candidates.append(ResidualCandidate(
                 kind="K", page_id=page_id, kv_head=kv_head,
@@ -320,7 +350,7 @@ class ResidualStoreManager:
                     D, device=R_V.device, dtype=R_V.dtype,
                 )
                 rv_blk_padded = torch.cat([rv_blk_padded, pad], dim=0)
-            packed, scale = pack_4bit(rv_blk_padded)
+            packed, scale = pack_residual(rv_blk_padded, cfg.residual_bits)
 
             v_candidates.append(ResidualCandidate(
                 kind="V", page_id=page_id, kv_head=kv_head,

@@ -1,0 +1,2 @@
+model,seq_len,num_samples,B_ppl,C_ppl,delta,delta_pct,C_k_reads,C_v_reads,B_k_reads,B_v_reads,B_runtime_s,C_runtime_s
+mistralai/Mistral-7B-v0.3,512,16,8.6116,8.5466,-0.065,-0.755,14823638,18730794,0,0,456.4,1181.7

@@ -55,9 +55,25 @@ def calibrate(model_id, device="cuda", k_avg_bits=3.0, v_bits=3, n_calib=2048):
 
 
 def one_arm(model_id, sl, n, label, sk, sv, rk, rv):
+    # C-arm residual config is env-tunable (defaults = paper). Set
+    # CAREKV_CFG_KCG/VTB/KMODE/RB to enable the improved configs (e.g. fine_rb8:
+    # KCG=16 VTB=2 KMODE=exact RB=8 with sk/sv/rk/rv=8). B-arm (budgets 0) is
+    # unaffected since it reads no residual.
+    kcg = int(os.environ.get("CAREKV_CFG_KCG", "32"))
+    vtb = int(os.environ.get("CAREKV_CFG_VTB", "4"))
+    os.environ["CAREKV_K_CORRECTION_MODE"] = os.environ.get("CAREKV_CFG_KMODE", "linear")
+    os.environ["CAREKV_RESIDUAL_BITS"] = os.environ.get("CAREKV_CFG_RB", "4")
+    # Correction kernel is env-tunable (default vectorized = paper). The
+    # vectorized path CPU-spins/hangs on Llama-2-13b's C-arm (40-layer full-MHA)
+    # regardless of GPU/sharding; `cached` is CARE_KV's stable path and is
+    # numerically equivalent for linear/no-KSCORE configs (cur_rb8). Set the CARE_KV
+    # internal env too so both the ctor arg and the layer code agree.
+    corr_impl = os.environ.get("CAREKV_CFG_CORR_IMPL", "vectorized")
+    os.environ["CAREKV_CORRECTION_IMPL"] = corr_impl
     ad = CAREKVAdapter(mode="fixed", bits=3, base_quantizer="blockgtq_style",
                        sk=sk, sv=sv, rk=rk, rv=rv,
-                       k_store_mode="post_rope", correction_impl="vectorized")
+                       k_channel_group=kcg, v_token_block=vtb,
+                       k_store_mode="post_rope", correction_impl=corr_impl)
     t0 = time.perf_counter()
     row = run_one(ad, model_id, "wikitext", sl, n)
     dt = time.perf_counter() - t0
@@ -74,20 +90,43 @@ def main():
     ap.add_argument("--append-csv", required=True)
     a = ap.parse_args()
 
+    # Record the residual config in BOTH the log and the CSV. Without this a
+    # ladder CSV silently mixes configs (fine_rb8 vs cur_rb8 give Δ% differing
+    # by 0.2-0.4pp), which reads as false model-dependence — see the
+    # Llama-2-13b row in improved_ladder.csv, whose config is unrecoverable.
+    cfg = dict(kcg=os.environ.get("CAREKV_CFG_KCG", "32"),
+               vtb=os.environ.get("CAREKV_CFG_VTB", "4"),
+               kmode=os.environ.get("CAREKV_CFG_KMODE", "linear"),
+               rb=os.environ.get("CAREKV_CFG_RB", "4"),
+               sk=os.environ.get("CAREKV_CFG_SK", "2"),
+               sv=os.environ.get("CAREKV_CFG_SV", "4"),
+               rk=os.environ.get("CAREKV_CFG_RK", "2"),
+               rv=os.environ.get("CAREKV_CFG_RV", "2"))
+    corr_impl = os.environ.get("CAREKV_CFG_CORR_IMPL", "vectorized")
+    cfg_str = "kcg{kcg}_vtb{vtb}_{kmode}_rb{rb}_s{sk}{sv}_r{rk}{rv}".format(**cfg) + f"_{corr_impl}"
+    cfg_name = os.environ.get("CAREKV_CFG_NAME", cfg_str)
+    # n_calib is env-tunable purely to make a fast diagnostic PROBE (a smaller
+    # calib changes B/C ppl, so a reduced value is throwaway-only, never paper).
+    n_calib = int(os.environ.get("CAREKV_CFG_NCALIB", "2048"))
+
     print(f"[bgtq-adapter] {a.model_id} SL={a.seq_len} N={a.num_samples}", flush=True)
+    print(f"[bgtq-adapter] config={cfg_name} [{cfg_str}] n_calib={n_calib}", flush=True)
     tc = time.perf_counter()
-    meta = calibrate(a.model_id)
+    meta = calibrate(a.model_id, n_calib=n_calib)
     print(f"[bgtq-adapter] calibrated {meta} in {time.perf_counter()-tc:.1f}s", flush=True)
 
     import gc
+    csk = int(os.environ.get("CAREKV_CFG_SK", "2")); csv_ = int(os.environ.get("CAREKV_CFG_SV", "4"))
+    crk = int(os.environ.get("CAREKV_CFG_RK", "2")); crv = int(os.environ.get("CAREKV_CFG_RV", "2"))
     B = one_arm(a.model_id, a.seq_len, a.num_samples, "B base_quant", 0, 0, 0, 0)
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache(); torch.cuda.synchronize()
-    C = one_arm(a.model_id, a.seq_len, a.num_samples, "C carekv",     2, 4, 2, 2)
+    C = one_arm(a.model_id, a.seq_len, a.num_samples, "C carekv", csk, csv_, crk, crv)
     delta = (C.ppl - B.ppl) if (B.ppl and C.ppl) else None
 
     row = dict(model=a.model_id, seq_len=a.seq_len, num_samples=a.num_samples,
+               config=cfg_name, config_full=cfg_str,
                B_ppl=B.ppl, C_ppl=C.ppl, delta=round(delta, 4) if delta is not None else "",
                delta_pct=round(100*delta/B.ppl, 3) if delta is not None and B.ppl else "",
                C_k_reads=C.k_reads, C_v_reads=C.v_reads,
@@ -95,6 +134,19 @@ def main():
                B_runtime_s=B.runtime_seconds, C_runtime_s=C.runtime_seconds)
     os.makedirs(os.path.dirname(a.append_csv) or ".", exist_ok=True)
     wh = not os.path.exists(a.append_csv) or os.path.getsize(a.append_csv) == 0
+    if not wh:
+        # Appending a row whose fields don't match the existing header would
+        # silently shift every column. Refuse instead — the run is already done,
+        # so the result is printed below and nothing is lost.
+        with open(a.append_csv, newline="") as f:
+            existing = next(csv.reader(f), [])
+        if existing != list(row.keys()):
+            print(f"[bgtq-adapter] ERROR: header mismatch in {a.append_csv}\n"
+                  f"  file: {existing}\n  row : {list(row.keys())}\n"
+                  f"  NOT appending — write to a fresh CSV instead.", flush=True)
+            print(f"[bgtq-adapter] DONE  B={B.ppl}  C={C.ppl}  Δ={row['delta']} "
+                  f"({row['delta_pct']}%)  C_reads K={C.k_reads}/V={C.v_reads}", flush=True)
+            return
     with open(a.append_csv, "a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(row.keys()))
         if wh: w.writeheader()

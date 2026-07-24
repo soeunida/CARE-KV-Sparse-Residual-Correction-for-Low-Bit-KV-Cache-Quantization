@@ -1,0 +1,3 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_bar,k_reads,v_reads,runtime_s,status
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,64,bar,10.9309,,,0.0,41780333,50494355,1569.0,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,64,uni_rv4,10.7328,,,-0.1981,69039810,69372222,1570.0,real

@@ -67,7 +67,7 @@ CAREKV_BUDGET_POLICY=uniform
 STORE_ABS_K=2
 STORE_ABS_V=4
 READ_ABS_K=2
-READ_ABS_V=2
+READ_ABS_V=4      # was 2; read-all-V (all sv=4 stored slots) — free equal-mem win, 7/7 NS=64 (§11)
 ```
 
 **Promoted 2026-07-15** from `linear` / `cached` / current-selector to
@@ -475,6 +475,45 @@ Driver: `tools/eval_exact_kcorr.py` (same `run_one` windowing as
 
 ---
 
+## 11. read-all-V (`READ_ABS_V=4`) — promoted paper default
+
+Store budget is `STORE_ABS_V/sv=4` but the read budget was `READ_ABS_V=2`, so
+decode read only **half** the V residual slots already in the cache. Reading all
+4 (`READ_ABS_V=4`) on top of `combined_exact` is a **free, equal-memory** quality
+gain: stored slots are unchanged (identical KV memory), only decode read compute
+rises (K reads ~2×, V ~1.3×); runtime is ~flat in the eval harness.
+
+**NS=64 WT-2 SL512, all 7 §5g models — 7/7 improve, 0 regressions** (`bar` =
+`combined_exact` rv=2 = the §10 NS=64 table; `rv4` = same + `READ_ABS_V=4`):
+
+| model | turbo | bar (rv=2) | **rv=4** | rv4−bar | rv4 vs turbo |
+|---|---:|---:|---:|---:|---|
+| TinyLlama-1.1B | 12.917 | 10.931 | **10.7328** | −0.198 | −2.184 win |
+| DeepSeek-7B | 9.590 | 9.335 | **9.2376** | −0.097 | −0.352 win |
+| Llama-2-13B | 6.808 | 6.731 | **6.6595** | −0.072 | −0.149 win |
+| Yi-6B | 8.293 | 7.931 | **7.8675** | −0.064 | −0.426 win |
+| OpenLLaMA-7B | 9.108 | 8.786 | **8.7226** | −0.063 | −0.385 win |
+| Mistral-7B | 7.586 | 7.321 | **7.2695** | −0.052 | −0.317 win |
+| SOLAR-10.7B | 6.730 | 6.557 | **6.5261** | −0.031 | −0.204 win |
+
+- **Consistency gate PASSED:** TinyLlama `bar` re-run in the rv4 driver = 10.9309
+  vs §10 published 10.931 (Δ=−0.0001) — same `run_one` windowing, so these rows
+  drop straight into the §10 NS=64 table. Widens every TurboQuant margin.
+- **Refutes the OLD "reads>2 add noise" claim** (RECOVERED_rotation §4): that was
+  the pre-`combined_exact` linear/uniform config. Under `combined_exact` the
+  residual error is diffuse enough that read-breadth helps every model, TinyLlama
+  most (−0.198). Confirmed NS=8→32→64, monotone and stable.
+- **Rotation base quantizer is a confirmed DEAD-END** (the direction this
+  screening started from): post-RoPE Hadamard hurts, pre-RoPE ties at rv=2, and
+  `rot_rv4` stacked on `combined_exact` *regresses* DeepSeek (+0.109). The gain
+  here is read-breadth, not rotation.
+
+Driver: `tools/eval_rotation_stack_screen.py` (arm `uni_rv4`; same `run_one` as
+§10). CSVs: `results/rotation_stack/{confirm_ns32,regression/easy_*,ns64/*}.csv`.
+Promoted 2026-07-18 after the 7/7 NS=64 confirm + gate above.
+
+---
+
 ## Runtime knobs cheat-sheet
 
 | Env var | Values | Effect |
@@ -491,7 +530,7 @@ Driver: `tools/eval_exact_kcorr.py` (same `run_one` windowing as
 | `CAREKV_SCALE_QUANT` | `none` / `int8` | Per-page scale quantization. **`int8` for paper.** |
 | `BASE_BITS` | 2 / 3 / 4 | Base KV bit-width. **3 for paper.** |
 | `STORE_ABS_K`, `STORE_ABS_V` | int | Absolute per-page store budget (K, V). **2, 4 for paper.** |
-| `READ_ABS_K`, `READ_ABS_V` | int | Absolute per-decode read budget (K, V). **2, 2 for paper.** |
+| `READ_ABS_K`, `READ_ABS_V` | int | Absolute per-decode read budget (K, V). **2, 4 for paper** (`V=4`=read-all-V, promoted 2026-07-18, §11; was 2). |
 | `CAREKV_DEBUG_STATS` | 0 / 1 | Emit `K_reads` / `V_reads` counters. **Always set 1 for CARE-KV runs** — needed to validate the router fired. |
 | `MODEL_ID` | HF id | Defaults to `TinyLlama/TinyLlama-1.1B-Chat-v1.0`. |
 | `SEQ_LEN`, `NUM_SAMPLES` | int | PPL window length / count. |

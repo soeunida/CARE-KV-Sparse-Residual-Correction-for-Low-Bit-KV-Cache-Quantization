@@ -1,0 +1,4 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_bar,k_reads,v_reads,runtime_s,status
+01-ai/Yi-6B,512,32,turbo,7.8057,,0.0,0.3622,0,0,15.4,real
+01-ai/Yi-6B,512,32,bar,7.4435,,-0.3622,0.0,31940658,35168206,796.7,real
+01-ai/Yi-6B,512,32,uni_rv4,7.3961,,-0.4096,-0.0474,51599796,49063500,777.5,real

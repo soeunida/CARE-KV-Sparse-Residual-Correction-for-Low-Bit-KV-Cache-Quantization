@@ -1,0 +1,3 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_bar,k_reads,v_reads,runtime_s,status
+NousResearch/Llama-2-13b-hf,512,64,uni_rv4,6.6595,,,,192436453,122136347,23872.8,real
+deepseek-ai/deepseek-llm-7b-base,512,64,uni_rv4,9.2376,,,,92687651,96056029,12954.3,real

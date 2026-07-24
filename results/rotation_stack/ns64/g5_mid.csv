@@ -1,0 +1,3 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_bar,k_reads,v_reads,runtime_s,status
+01-ai/Yi-6B,512,64,uni_rv4,7.8675,,,,102656163,98670429,1784.1,real
+openlm-research/open_llama_7b_v2,512,64,uni_rv4,8.7226,,,,99887662,101438930,17025.1,real

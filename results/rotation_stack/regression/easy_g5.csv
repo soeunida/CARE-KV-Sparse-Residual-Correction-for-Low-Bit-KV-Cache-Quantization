@@ -1,0 +1,7 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_bar,k_reads,v_reads,runtime_s,status
+mistralai/Mistral-7B-v0.3,512,32,turbo,7.2545,,0.0,0.3376,0,0,15.7,real
+mistralai/Mistral-7B-v0.3,512,32,bar,6.9169,,-0.3376,0.0,28063256,39045608,2029.0,real
+mistralai/Mistral-7B-v0.3,512,32,uni_rv4,6.8875,,-0.367,-0.0294,48031472,52631824,1987.5,real
+openlm-research/open_llama_7b_v2,512,32,turbo,8.5333,,0.0,0.2958,0,0,10.1,real
+openlm-research/open_llama_7b_v2,512,32,bar,8.2375,,-0.2958,0.0,31061537,36047327,7780.5,real
+openlm-research/open_llama_7b_v2,512,32,uni_rv4,8.1594,,-0.3739,-0.0781,50179862,50483434,9049.8,real

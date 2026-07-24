@@ -1,0 +1,7 @@
+model_id,seq_len,num_samples,arm,ppl,delta_vs_fp16,delta_vs_turbo,delta_vs_bar,k_reads,v_reads,runtime_s,status
+upstage/SOLAR-10.7B-v1.0,512,32,turbo,6.335,,0.0,0.1855,0,0,15.5,real
+upstage/SOLAR-10.7B-v1.0,512,32,bar,6.1495,,-0.1855,0.0,49694386,50968910,2960.2,real
+upstage/SOLAR-10.7B-v1.0,512,32,uni_rv4,6.1292,,-0.2058,-0.0203,80914110,70080834,2450.4,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,turbo,12.4473,,0.0,2.0038,0,0,4.2,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,bar,10.4435,,-2.0038,0.0,20892538,25244806,510.7,real
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,32,uni_rv4,10.2202,,-2.2271,-0.2233,34552384,34653632,508.1,real

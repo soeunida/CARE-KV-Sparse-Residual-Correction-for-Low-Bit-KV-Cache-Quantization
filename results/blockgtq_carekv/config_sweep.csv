@@ -1,0 +1,6 @@
+model,seq_len,num_samples,config,B_ppl,C_ppl,delta,delta_pct,k_reads,v_reads,seconds
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,16,cur,13.0001,12.7973,-0.2028,-1.56,10154649,12914023,195.6
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,16,exact,13.0001,12.8106,-0.1895,-1.458,10142654,12926018,193.2
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,16,exact_readall,13.0001,12.7822,-0.2179,-1.676,11926423,34210921,203.8
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,16,fine,13.0001,12.7704,-0.2297,-1.767,23482022,68792666,441.0
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,512,16,finer,13.0001,12.7639,-0.2362,-1.817,45722464,138826912,1215.7

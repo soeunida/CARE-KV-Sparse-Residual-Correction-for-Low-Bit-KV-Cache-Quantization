@@ -507,8 +507,11 @@ class CAREKVCache:
         ratio_estimate = int(P * Hkv * L * cfg.store_budget_ratio * 4)
         abs_estimate = int(P * Hkv * L * (cfg.store_abs_k + cfg.store_abs_v) * 2)
         max_slots = max(64, ratio_estimate, abs_estimate)
-        k_slot_size = cfg.page_size * cfg.k_channel_group // 2   # 4-bit packed
-        v_slot_size = cfg.v_token_block * D // 2
+        # Slot byte size depends on residual bit-width: 4-bit packs 2 values per
+        # byte (//2); 8-bit stores one int8 per value (2× the bytes, ~2× finer).
+        _rb = int(getattr(cfg, "residual_bits", 4))
+        k_slot_size = cfg.page_size * cfg.k_channel_group * _rb // 8
+        v_slot_size = cfg.v_token_block * D * _rb // 8
         # Optimized Vdom: do NOT pre-allocate a K residual arena. A V-only
         # (Vdom) deployment never writes or reads K residuals (store: use_k=0;
         # router: kind="v" forces bk=0 and skips K scoring), so the K arena is
